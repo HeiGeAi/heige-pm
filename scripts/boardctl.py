@@ -807,37 +807,214 @@ def _safe_url(value: Any) -> str | None:
     return value.strip()
 
 
-def _source_link(source: dict[str, Any]) -> str:
+def _source_link(source: dict[str, Any], fallback: str = "Source") -> str:
     url = _safe_url(source.get("location"))
-    label = _display(source.get("type"), "Source")
+    label = _display(source.get("type"), fallback)
     if url is None:
         return f"<span>{label}</span>"
     return f'<a href="{html.escape(url, quote=True)}" rel="noopener noreferrer">{label}</a>'
 
 
-def _items(items: list[dict[str, Any]], body) -> str:
-    return "".join(f"<article>{body(item)}</article>" for item in items) or "<p>None recorded.</p>"
+def _pill(text: str, tone: str) -> str:
+    return f'<span class="pill {tone}">{text}</span>'
+
+
+STATUS_TONES = {
+    "in_progress": "accent",
+    "done": "ok",
+    "blocked": "bad",
+    "conflict": "warn",
+    "not_started": "neutral",
+    "cancelled": "neutral",
+    "unknown": "neutral",
+}
+STATUS_ORDER = ("in_progress", "blocked", "conflict", "not_started", "done", "cancelled", "unknown")
+DECISION_TONES = {"decided": "ok", "proposed": "accent", "reversed": "warn", "conflict": "bad"}
+RESULT_TONES = {"passed": "ok", "failed": "bad"}
+
+LABELS = {
+    "en": {
+        "colon": ": ",
+        "eyebrow": "Project dashboard",
+        "audience.private": "Private view",
+        "audience.team": "Team view",
+        "audience.public": "Public view",
+        "updated": "Updated",
+        "tasks": "Current tasks",
+        "workflow": "Workflow gates",
+        "members": "Team roles",
+        "timeline": "Update timeline",
+        "decisions": "Decisions",
+        "deliveries": "Deliveries",
+        "risks": "Risks and learnings",
+        "risks_summary": "Review recorded risks and learnings",
+        "risks_label": "Risks",
+        "learnings_label": "Learnings",
+        "evidence": "Evidence",
+        "sources": "Sources",
+        "none": "None recorded",
+        "not_recorded": "Not recorded",
+        "no_tasks": "No current tasks",
+        "no_source": "No source recorded",
+        "visible_source": "Visible source",
+        "restricted_source": "Restricted hidden source",
+        "restricted_member": "Restricted member",
+        "owner": "Owner",
+        "due": "Due",
+        "blocked": "Blocked",
+        "gate_yes": "Human gate",
+        "gate_no": "No human gate",
+        "read_at": "Read",
+        "source_fallback": "Source",
+        "brief_audience": "Audience",
+        "brief_goal": "Goal",
+        "footer": "Static dashboard · no scripts · print ready",
+        "status.unknown": "Unknown",
+        "status.not_started": "Not started",
+        "status.in_progress": "In progress",
+        "status.blocked": "Blocked",
+        "status.done": "Done",
+        "status.conflict": "Conflict",
+        "status.cancelled": "Cancelled",
+        "ver.none": "No verification",
+        "ver.source_report": "Source report",
+        "ver.source_backed": "Source backed",
+        "ver.artifact_present": "Artifact present",
+        "ver.local_verified": "Locally verified",
+        "ver.target_verified": "Target verified",
+        "ver.e2e_verified": "End-to-end verified",
+        "appr.draft": "Draft",
+        "appr.reviewed": "Reviewed",
+        "appr.accepted": "Accepted",
+        "dec.proposed": "Proposed",
+        "dec.decided": "Decided",
+        "dec.reversed": "Reversed",
+        "dec.conflict": "Conflict",
+    },
+    "zh": {
+        "colon": "：",
+        "eyebrow": "项目看板",
+        "audience.private": "内部视图",
+        "audience.team": "团队视图",
+        "audience.public": "公开视图",
+        "updated": "最近更新",
+        "tasks": "当前任务",
+        "workflow": "流程闸门",
+        "members": "团队分工",
+        "timeline": "推进时间线",
+        "decisions": "拍板决策",
+        "deliveries": "交付物",
+        "risks": "风险与经验",
+        "risks_summary": "展开查看各期风险与经验",
+        "risks_label": "风险",
+        "learnings_label": "经验",
+        "evidence": "验证证据",
+        "sources": "来源台账",
+        "none": "暂无记录",
+        "not_recorded": "未记录",
+        "no_tasks": "暂无任务",
+        "no_source": "无来源记录",
+        "visible_source": "来源可见",
+        "restricted_source": "来源受限已隐藏",
+        "restricted_member": "成员受限",
+        "owner": "负责",
+        "due": "截止",
+        "blocked": "受阻原因",
+        "gate_yes": "人工闸门",
+        "gate_no": "自动流转",
+        "read_at": "读取于",
+        "source_fallback": "来源",
+        "brief_audience": "受众",
+        "brief_goal": "目标",
+        "footer": "静态看板 · 零脚本 · 可直接打印",
+        "status.unknown": "未知",
+        "status.not_started": "未开始",
+        "status.in_progress": "推进中",
+        "status.blocked": "受阻",
+        "status.done": "已完成",
+        "status.conflict": "冲突待裁",
+        "status.cancelled": "已取消",
+        "ver.none": "未验证",
+        "ver.source_report": "来源口径",
+        "ver.source_backed": "来源背书",
+        "ver.artifact_present": "产物已存在",
+        "ver.local_verified": "本地已验证",
+        "ver.target_verified": "目标环境已验证",
+        "ver.e2e_verified": "端到端已验证",
+        "appr.draft": "草稿",
+        "appr.reviewed": "已审阅",
+        "appr.accepted": "已验收",
+        "dec.proposed": "提议中",
+        "dec.decided": "已拍板",
+        "dec.reversed": "已推翻",
+        "dec.conflict": "冲突待裁",
+    },
+}
+
+
+def _labels(language: str) -> dict[str, str]:
+    key = "zh" if isinstance(language, str) and language.lower().startswith("zh") else "en"
+    return LABELS[key]
+
+
+def _enum_label(labels: dict[str, str], prefix: str, value: Any) -> str:
+    if isinstance(value, str) and f"{prefix}.{value}" in labels:
+        return labels[f"{prefix}.{value}"]
+    return _display(value, labels["not_recorded"])
 
 
 def _theme_css() -> str:
     return """
 :root { color-scheme: light; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.55 system-ui, sans-serif; }
-a { color: var(--accent); } a:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-.shell { max-width: 72rem; margin: auto; padding: 1.25rem; }
-header { border-bottom: 1px solid var(--line); padding-bottom: 1rem; } h1, h2, h3, p { overflow-wrap: anywhere; }
-.eyebrow, .meta { color: var(--muted); font-size: .9rem; } .goal { font-size: 1.2rem; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-section { margin-top: 1rem; } article, details { background: var(--card); border: 1px solid var(--line); border-radius: .5rem; padding: .9rem; margin: .6rem 0; }
-.timeline article { border-left: .35rem solid var(--accent); } .timeline time { color: var(--muted); font-weight: 700; }
-.counts { display: flex; flex-wrap: wrap; gap: .5rem; } .count { background: var(--tag); border-radius: 999px; padding: .2rem .55rem; }
-[data-theme="warm"] { --page:#fff8ed; --ink:#33251c; --card:#fffdf8; --line:#e4cda9; --accent:#9b4d16; --focus:#005fcc; --muted:#765f4b; --tag:#f6e4c8; }
-[data-theme="clean"] { --page:#f7fafc; --ink:#16202a; --card:#fff; --line:#cdd8e2; --accent:#126a8a; --focus:#7342d6; --muted:#526373; --tag:#deedf4; }
-[data-theme="dark"] { color-scheme:dark; --page:#11161c; --ink:#edf3f8; --card:#1b242e; --line:#3b4c5c; --accent:#71d0ff; --focus:#ffd166; --muted:#b3c1ce; --tag:#263746; }
-[data-theme="paper"] { --page:#f4f0e7; --ink:#201f1b; --card:#fbfaf5; --line:#aaa394; --accent:#594d38; --focus:#005fcc; --muted:#625e55; --tag:#e6e0d3; }
-@media (max-width: 40rem) { .shell { padding: 1rem; } .grid { grid-template-columns: 1fr; } }
-@media print { :root { --page:#fff; --ink:#000; --card:#fff; --line:#000; --accent:#000; --focus:#000; --muted:#000; --tag:#fff; } body { background: #fff; color: #000; } .shell { max-width: none; } article, details { break-inside: avoid; } a { color: #000; text-decoration: underline; } }
+body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.65 "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif; }
+a { color: var(--accent-deep); }
+a:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.shell { max-width: 68rem; margin: auto; padding: 2rem 1.5rem 3rem; }
+h1, h2, h3, p, summary { overflow-wrap: anywhere; }
+header { padding: 1rem 0 1.6rem; border-bottom: 1px solid var(--line); }
+.eyebrow { display: inline-flex; align-items: center; gap: .5rem; margin: 0 0 1.1rem; padding: .3rem .85rem; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--muted); font-size: .8rem; letter-spacing: .06em; box-shadow: var(--shadow-soft); }
+.eyebrow::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); }
+h1 { margin: 0 0 .6rem; font-family: Georgia, "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif; font-size: clamp(2.1rem, 5vw, 3.1rem); line-height: 1.15; }
+.goal { margin: 0 0 .7rem; max-width: 46rem; font-size: 1.15rem; color: var(--ink-soft); }
+.meta { color: var(--muted); font-size: .85rem; margin: .3rem 0 0; }
+h2 { display: flex; align-items: center; gap: .6rem; margin: 2.4rem 0 .9rem; font-size: 1.3rem; }
+h2::before { content: ""; flex: none; width: .4rem; height: 1.2rem; border-radius: 999px; background: var(--accent); }
+h3 { margin: 0 0 .3rem; font-size: 1.02rem; }
+article, details { background: var(--card); border: 1px solid var(--line); border-radius: 1.25rem; padding: 1rem 1.15rem; margin: .7rem 0; box-shadow: var(--shadow); }
+details > article { box-shadow: none; border-radius: .9rem; }
+summary { cursor: pointer; color: var(--accent-deep); font-weight: 600; }
+.none { color: var(--muted); font-size: .9rem; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: .8rem; }
+.stat { background: var(--card); border: 1px solid var(--line); border-top: .25rem solid var(--line); border-radius: 1rem; padding: .8rem 1rem .7rem; box-shadow: var(--shadow); }
+.stat.accent { border-top-color: var(--accent); } .stat.ok { border-top-color: var(--ok); } .stat.bad { border-top-color: var(--bad); } .stat.warn { border-top-color: var(--warn); }
+.stat-n { display: block; font-family: Georgia, "Songti SC", serif; font-size: 1.9rem; line-height: 1.15; }
+.stat-l { color: var(--muted); font-size: .8rem; }
+.pills { display: flex; flex-wrap: wrap; gap: .4rem; margin: .35rem 0; }
+.pill { display: inline-block; padding: .14rem .6rem; border: 1px solid transparent; border-radius: 999px; font-size: .76rem; }
+.pill.accent { background: var(--accent); color: var(--on-accent); }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.line, .pill.neutral { border-color: var(--line); color: var(--muted); background: transparent; }
+.pill.gate { background: var(--tag); color: var(--accent-deep); }
+.warnline { color: var(--bad); font-size: .85rem; margin: .2rem 0; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.4rem; }
+.step { display: flex; gap: .9rem; }
+.step-n { flex: none; min-width: 1.9rem; font-family: Georgia, "Songti SC", serif; font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+.member { display: flex; gap: .8rem; }
+.avatar { flex: none; width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--tag); color: var(--accent-deep); font-weight: 700; }
+.timeline { margin-left: .3rem; padding-left: 1.2rem; border-left: 2px solid var(--line); }
+.timeline article { position: relative; }
+.timeline article::before { content: ""; position: absolute; left: -1.75rem; top: 1.3rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 .28rem var(--page); }
+time { display: block; font-family: Georgia, "Songti SC", serif; font-weight: 700; font-size: .95rem; color: var(--accent-deep); }
+footer { margin-top: 2.6rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+[data-theme="warm"] { --page:#fff8f1; --card:#ffffff; --ink:#1d1e1c; --ink-soft:#4a4a47; --line:#e3d6c5; --accent:#fa5d00; --accent-deep:#d94f00; --on-accent:#ffffff; --muted:#615f5c; --tag:#fee3b5; --focus:#005fcc; --ok:#1d7a3c; --ok-bg:#e3f4e6; --bad:#c72c1e; --bad-bg:#fde6e2; --warn:#9a6b00; --warn-bg:#fdf1d7; --shadow:0 .4rem 1.5rem rgba(250,166,0,.14), 0 1px 2px rgba(29,30,28,.05); --shadow-soft:0 2px .75rem rgba(227,214,197,.55); }
+[data-theme="clean"] { --page:#f6f9fb; --card:#ffffff; --ink:#16202a; --ink-soft:#3c4c5c; --line:#d6e0e8; --accent:#126a8a; --accent-deep:#0e5570; --on-accent:#ffffff; --muted:#526373; --tag:#ddedf4; --focus:#7342d6; --ok:#1d7a3c; --ok-bg:#e3f4e6; --bad:#c72c1e; --bad-bg:#fdeae7; --warn:#8a6100; --warn-bg:#f6eed3; --shadow:0 .3rem 1.1rem rgba(22,32,42,.08), 0 1px 2px rgba(22,32,42,.05); --shadow-soft:0 2px .6rem rgba(22,32,42,.06); }
+[data-theme="dark"] { color-scheme: dark; --page:#11161c; --card:#1b242e; --ink:#edf3f8; --ink-soft:#c6d2dd; --line:#3b4c5c; --accent:#71d0ff; --accent-deep:#9adcff; --on-accent:#0d1a24; --muted:#b3c1ce; --tag:#263746; --focus:#ffd166; --ok:#6fdd8b; --ok-bg:#173423; --bad:#ff8a7a; --bad-bg:#3a1d18; --warn:#ffd166; --warn-bg:#3a2f14; --shadow:0 .4rem 1.5rem rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.4); --shadow-soft:0 2px .6rem rgba(0,0,0,.3); }
+[data-theme="paper"] { --page:#f4f0e7; --card:#fdfcf7; --ink:#201f1b; --ink-soft:#45423a; --line:#d8d0bf; --accent:#8a5a2b; --accent-deep:#6e4722; --on-accent:#ffffff; --muted:#625e55; --tag:#e9e2d1; --focus:#005fcc; --ok:#2c6e3c; --ok-bg:#e7efdf; --bad:#a83226; --bad-bg:#f4e2dc; --warn:#8a6100; --warn-bg:#f0e8cf; --shadow:0 .3rem 1rem rgba(90,80,60,.14), 0 1px 2px rgba(32,31,27,.05); --shadow-soft:0 2px .6rem rgba(90,80,60,.1); }
+@media (max-width: 40rem) { .shell { padding: 1.4rem 1rem 2rem; } .grid { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .timeline { padding-left: 1rem; } .timeline article::before { left: -1.55rem; } }
+@media print { [data-theme="warm"], [data-theme="clean"], [data-theme="dark"], [data-theme="paper"] { color-scheme: light; --page:#fff; --ink:#000; --card:#fff; --ink-soft:#000; --line:#000; --accent:#000; --accent-deep:#000; --on-accent:#fff; --muted:#000; --tag:#fff; --focus:#000; --ok:#000; --ok-bg:#fff; --bad:#000; --bad-bg:#fff; --warn:#000; --warn-bg:#fff; --shadow:none; --shadow-soft:none; } body { background: #fff; color: #000; } .shell { max-width: none; } article, details, .stat { break-inside: avoid; box-shadow: none; } .pill { border-color: #000; } a { color: #000; text-decoration: underline; } }
 """
 
 
@@ -857,25 +1034,159 @@ def _language(project: dict[str, Any]) -> str:
 def render_html(project: dict[str, Any], audience: str = "private", theme: str | None = None) -> str:
     theme = _resolve_theme(project, theme)
     data = filter_for_audience(project, audience)
+    labels = _labels(_language(project))
+    colon = labels["colon"]
     tasks = data["tasks"]
+    member_names = {
+        member["id"]: _display(member.get("display_name"), labels["not_recorded"])
+        for member in data["members"]
+        if isinstance(member.get("id"), str)
+    }
+    source_summaries = {
+        "Visible source": labels["visible_source"],
+        "Restricted hidden source": labels["restricted_source"],
+        "No source recorded": labels["no_source"],
+    }
+
+    def source_tag(item: dict[str, Any]) -> str:
+        raw = item.get("source_summary")
+        return source_summaries.get(raw, _display(raw, labels["no_source"]))
+
+    def cards(items: list[dict[str, Any]], body) -> str:
+        rendered = "".join(f"<article>{body(item)}</article>" for item in items)
+        return rendered or f'<p class="none">{labels["none"]}</p>'
+
     counts: dict[str, int] = {}
     for task in {task.get("id"): task for task in tasks if task.get("id")}.values():
         status = str(task.get("reported_status", "unknown"))
         counts[status] = counts.get(status, 0) + 1
-    count_html = "".join(
-        f'<span class="count">{_display(status)}: {count}</span>' for status, count in sorted(counts.items())
-    ) or '<span class="count">No current tasks</span>'
-    workflow = _items(data["workflow"], lambda item: f"<h3>{_display(item.get('name'))}</h3><p>{_display(item.get('description'))}</p><p class=\"meta\">Human gate: {_display(item.get('human_gate'))}</p>")
-    members = _items(data["members"], lambda item: f"<h3>{_display(item.get('display_name'))}</h3><p>{_display(item.get('responsibility'))}</p>")
-    task_list = _items(tasks, lambda item: f"<h3>{_display(item.get('description'))}</h3><p class=\"meta\">{_display(item.get('reported_status'))} · {_display(item.get('verification_level'))} · {_display(item.get('approval_state'))}</p>")
-    timeline = _items(data["updates"], lambda item: f"<time>{_display(item.get('date'))}</time><h3>{_display(item.get('title'))}</h3><p>{_display(item.get('summary'))}</p><p class=\"meta\">{_display(item.get('source_summary'), 'No source recorded')}</p>")
-    decisions = _items(data["decisions"], lambda item: f"<h3>{_display(item.get('topic'))}</h3><p>{_display(item.get('conclusion'))}</p><p class=\"meta\">{_display(item.get('decision_state'))}</p>")
-    evidence = _items(data["evidence"], lambda item: f"<h3>{_display(item.get('artifact'))}</h3><p class=\"meta\">{_display(item.get('result'))} · {_display(item.get('target'))}</p>")
-    sources = _items(data["sources"], lambda item: f"<h3>{_source_link(item)}</h3><p class=\"meta\">Read {_display(item.get('read_at'))}</p>")
+    ordered = [status for status in STATUS_ORDER if status in counts]
+    ordered.extend(status for status in sorted(counts) if status not in STATUS_ORDER)
+    stat_cards = "".join(
+        f'<div class="stat {STATUS_TONES.get(status, "neutral")}"><span class="stat-n">{counts[status]}</span>'
+        f'<span class="stat-l">{_enum_label(labels, "status", status)}</span></div>'
+        for status in ordered
+    ) or f'<div class="stat neutral"><span class="stat-n">0</span><span class="stat-l">{labels["no_tasks"]}</span></div>'
+
+    def task_card(item: dict[str, Any]) -> str:
+        status = str(item.get("reported_status", "unknown"))
+        pills = [_pill(_enum_label(labels, "status", status), STATUS_TONES.get(status, "neutral"))]
+        for prefix, field in (("ver", "verification_level"), ("appr", "approval_state")):
+            if item.get(field):
+                pills.append(_pill(_enum_label(labels, prefix, item.get(field)), "line"))
+        meta_parts = []
+        owner = item.get("owner")
+        if isinstance(owner, str) and owner in member_names:
+            meta_parts.append(f"{labels['owner']}{colon}{member_names[owner]}")
+        elif item.get("owner_summary"):
+            meta_parts.append(f"{labels['owner']}{colon}{labels['restricted_member']}")
+        if item.get("due_date"):
+            meta_parts.append(f"{labels['due']}{colon}{_display(item.get('due_date'))}")
+        blocked = (
+            f'<p class="warnline">{labels["blocked"]}{colon}{_display(item.get("blocked_reason"))}</p>'
+            if item.get("blocked_reason") else ""
+        )
+        meta = f'<p class="meta">{" · ".join(meta_parts)}</p>' if meta_parts else ""
+        return (
+            f'<h3>{_display(item.get("description"), labels["not_recorded"])}</h3>'
+            f'<div class="pills">{"".join(pills)}</div>{blocked}{meta}'
+        )
+
+    steps = "".join(
+        f'<article class="step"><span class="step-n">{index:02d}</span><div>'
+        f'<h3>{_display(item.get("name"), labels["not_recorded"])}</h3>'
+        f'<p>{_display(item.get("description"), labels["not_recorded"])}</p>'
+        f'<div class="pills">{_pill(labels["gate_yes"] if item.get("human_gate") else labels["gate_no"], "gate" if item.get("human_gate") else "line")}</div>'
+        f"</div></article>"
+        for index, item in enumerate(data["workflow"], start=1)
+    ) or f'<p class="none">{labels["none"]}</p>'
+
+    def member_card(item: dict[str, Any]) -> str:
+        name = item.get("display_name")
+        initial = html.escape(str(name)[:1], quote=True) if isinstance(name, str) and name else "?"
+        return (
+            f'<article class="member"><span class="avatar" aria-hidden="true">{initial}</span><div>'
+            f'<h3>{_display(name, labels["not_recorded"])}</h3>'
+            f'<p>{_display(item.get("responsibility"), labels["not_recorded"])}</p></div></article>'
+        )
+
+    members_html = "".join(member_card(item) for item in data["members"]) or f'<p class="none">{labels["none"]}</p>'
+
+    timeline = cards(data["updates"], lambda item: (
+        f'<time>{_display(item.get("date"), labels["not_recorded"])}</time>'
+        f'<h3>{_display(item.get("title"), labels["not_recorded"])}</h3>'
+        f'<p>{_display(item.get("summary"), labels["not_recorded"])}</p>'
+        f'<p class="meta">{source_tag(item)}</p>'
+    ))
+
+    def decision_card(item: dict[str, Any]) -> str:
+        state = item.get("decision_state")
+        meta_parts = []
+        decided_by = item.get("decided_by")
+        if isinstance(decided_by, str) and decided_by in member_names:
+            meta_parts.append(member_names[decided_by])
+        elif item.get("decided_by_summary"):
+            meta_parts.append(labels["restricted_member"])
+        if item.get("decided_at"):
+            meta_parts.append(_display(item.get("decided_at")))
+        meta_parts.append(source_tag(item))
+        return (
+            f'<div class="pills">{_pill(_enum_label(labels, "dec", state), DECISION_TONES.get(str(state), "neutral"))}</div>'
+            f'<h3>{_display(item.get("topic"), labels["not_recorded"])}</h3>'
+            f'<p>{_display(item.get("conclusion"), labels["not_recorded"])}</p>'
+            f'<p class="meta">{" · ".join(meta_parts)}</p>'
+        )
+
+    decisions = cards(data["decisions"], decision_card)
+
+    risk_items = cards(data["updates"], lambda item: (
+        f'<h3>{_display(item.get("title"), labels["not_recorded"])}</h3>'
+        f'<p>{labels["risks_label"]}{colon}{_display("，".join(map(str, item.get("risks", []))) if colon == "：" else ", ".join(map(str, item.get("risks", []))), labels["none"])}</p>'
+        f'<p>{labels["learnings_label"]}{colon}{_display("，".join(map(str, item.get("learnings", []))) if colon == "：" else ", ".join(map(str, item.get("learnings", []))), labels["none"])}</p>'
+    ))
+
+    def evidence_card(item: dict[str, Any]) -> str:
+        result = item.get("result")
+        pills = [_pill(_display(result, labels["not_recorded"]), RESULT_TONES.get(str(result), "neutral"))]
+        if item.get("target"):
+            pills.append(_pill(_display(item.get("target")), "line"))
+        meta_parts = [part for part in (_display(item.get("recorded_at"), ""), source_tag(item)) if part]
+        return (
+            f'<h3>{_display(item.get("artifact"), labels["not_recorded"])}</h3>'
+            f'<div class="pills">{"".join(pills)}</div><p class="meta">{" · ".join(meta_parts)}</p>'
+        )
+
+    evidence = cards(data["evidence"], evidence_card)
+
+    sources = cards(data["sources"], lambda item: (
+        f'<h3>{_source_link(item, labels["source_fallback"])}</h3>'
+        f'<p class="meta">{labels["read_at"]}{colon}{_display(item.get("read_at"), labels["not_recorded"])}</p>'
+    ))
+
+    deliveries_section = ""
+    if data["deliveries"]:
+        deliveries_section = (
+            f'<section><h2>{labels["deliveries"]}</h2>'
+            + cards(data["deliveries"], lambda item: (
+                f'<h3>{_display(item.get("name"), labels["not_recorded"])}</h3>'
+                f'<p>{_display(item.get("description"), labels["not_recorded"])}</p>'
+                f'<p class="meta">{source_tag(item)}</p>'
+            ))
+            + "</section>"
+        )
+
+    audience_label = labels.get(f"audience.{audience}", _display(audience))
     return f"""<!doctype html>
-<html lang=\"{html.escape(_language(project), quote=True)}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>{_display(data['project'].get('name'))}</title><style>{_theme_css()}</style></head>
-<body><div class=\"shell\"><header><p class=\"eyebrow\">Project dashboard · {_display(audience)} view</p><h1>{_display(data['project'].get('name'))}</h1><p class=\"goal\">{_display(data['project'].get('goal'))}</p><p class=\"meta\">Updated {_display(data['meta'].get('updated_at'))}</p></header>
-<main><section aria-labelledby=\"tasks\"><h2 id=\"tasks\">Current tasks</h2><div class=\"counts\">{count_html}</div>{task_list}</section><div class=\"grid\"><section><h2>Workflow gates</h2>{workflow}</section><section><h2>Team roles</h2>{members}</section></div><section class=\"timeline\"><h2>Update timeline</h2>{timeline}</section><section><h2>Decisions</h2>{decisions}</section><section><h2>Risks and learnings</h2><details><summary>Review recorded risks and learnings</summary>{_items(data['updates'], lambda item: f"<h3>{_display(item.get('title'))}</h3><p>Risks: {_display(', '.join(map(str, item.get('risks', []))), 'None recorded')}</p><p>Learnings: {_display(', '.join(map(str, item.get('learnings', []))), 'None recorded')}</p>")}</details></section><section><h2>Evidence</h2>{evidence}</section><section><h2>Sources</h2>{sources}</section></main></div></body></html>"""
+<html lang="{html.escape(_language(project), quote=True)}" data-theme="{theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{_display(data['project'].get('name'), labels['not_recorded'])}</title><style>{_theme_css()}</style></head>
+<body><div class="shell"><header><p class="eyebrow">{labels['eyebrow']} · {audience_label}</p><h1>{_display(data['project'].get('name'), labels['not_recorded'])}</h1><p class="goal">{_display(data['project'].get('goal'), labels['not_recorded'])}</p><p class="meta">{labels['updated']}{colon}{_display(data['meta'].get('updated_at'), labels['not_recorded'])}</p></header>
+<main><section aria-labelledby="tasks-title"><h2 id="tasks-title">{labels['tasks']}</h2><div class="stats">{stat_cards}</div>{cards(tasks, task_card)}</section>
+<div class="grid"><section><h2>{labels['workflow']}</h2>{steps}</section><section><h2>{labels['members']}</h2>{members_html}</section></div>
+<section><h2>{labels['timeline']}</h2><div class="timeline">{timeline}</div></section>
+<section><h2>{labels['decisions']}</h2>{decisions}</section>{deliveries_section}
+<section><h2>{labels['risks']}</h2><details><summary>{labels['risks_summary']}</summary>{risk_items}</details></section>
+<section><h2>{labels['evidence']}</h2>{evidence}</section>
+<section><h2>{labels['sources']}</h2>{sources}</section></main>
+<footer>{labels['footer']}</footer></div></body></html>"""
 
 
 def _markdown_text(value: Any, fallback: str = "Not recorded") -> str:
@@ -885,24 +1196,42 @@ def _markdown_text(value: Any, fallback: str = "Not recorded") -> str:
 
 
 def _brief_markdown(data: dict[str, Any], audience: str) -> str:
+    labels = _labels(_language(data))
+    colon = labels["colon"]
+    fallback = labels["not_recorded"]
+
+    def enum_text(prefix: str, value: Any) -> str:
+        key = f"{prefix}.{value}"
+        if isinstance(value, str) and key in labels:
+            return labels[key]
+        return _markdown_text(value, fallback)
+
     task_counts: dict[str, int] = {}
     for task in {task.get("id"): task for task in data["tasks"] if task.get("id")}.values():
         status = str(task.get("reported_status", "unknown"))
         task_counts[status] = task_counts.get(status, 0) + 1
+    ordered = [status for status in STATUS_ORDER if status in task_counts]
+    ordered.extend(status for status in sorted(task_counts) if status not in STATUS_ORDER)
     lines = [
-        f"# {_markdown_text(data['project'].get('name'))}",
+        f"# {_markdown_text(data['project'].get('name'), fallback)}",
         "",
-        f"Audience: {audience}",
-        f"Goal: {_markdown_text(data['project'].get('goal'))}",
-        f"Updated: {_markdown_text(data['meta'].get('updated_at'))}",
+        f"{labels['brief_audience']}{colon}{labels.get(f'audience.{audience}', audience)}",
+        f"{labels['brief_goal']}{colon}{_markdown_text(data['project'].get('goal'), fallback)}",
+        f"{labels['updated']}{colon}{_markdown_text(data['meta'].get('updated_at'), fallback)}",
         "",
-        "## Current tasks",
+        f"## {labels['tasks']}",
     ]
-    lines.extend(f"- {status}: {count}" for status, count in sorted(task_counts.items()))
-    lines.append("\n## Recent updates")
-    lines.extend(f"- {_markdown_text(item.get('date'))}: {_markdown_text(item.get('title'))}" for item in data["updates"])
-    lines.append("\n## Decisions")
-    lines.extend(f"- {_markdown_text(item.get('topic'))}: {_markdown_text(item.get('conclusion'))}" for item in data["decisions"])
+    lines.extend(f"- {enum_text('status', status)}{colon}{task_counts[status]}" for status in ordered)
+    lines.append(f"\n## {labels['timeline']}")
+    lines.extend(
+        f"- {_markdown_text(item.get('date'), fallback)}{colon}{_markdown_text(item.get('title'), fallback)}"
+        for item in data["updates"]
+    )
+    lines.append(f"\n## {labels['decisions']}")
+    lines.extend(
+        f"- {_markdown_text(item.get('topic'), fallback)}{colon}{_markdown_text(item.get('conclusion'), fallback)}"
+        for item in data["decisions"]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -994,13 +1323,18 @@ def render_project(
 
 def preview_html() -> str:
     cards = "".join(
-        f'<article class="preview-card" data-theme="{theme}"><p class="eyebrow">{theme} theme</p><h2>Project dashboard</h2><p>Readable cards for status, decisions, and evidence.</p><span class="count">In progress: 3</span></article>'
+        f'<article class="preview-card" data-theme="{theme}"><p class="eyebrow">{theme} theme</p>'
+        f'<h2>Project dashboard</h2><p>Hero, stat band, workflow steps, timeline, and status pills in the {theme} palette.</p>'
+        f'<div class="pills"><span class="pill accent">In progress</span><span class="pill ok">Done</span>'
+        f'<span class="pill bad">Blocked</span><span class="pill gate">Human gate</span></div>'
+        f'<div class="stats"><div class="stat accent"><span class="stat-n">3</span><span class="stat-l">In progress</span></div>'
+        f'<div class="stat ok"><span class="stat-n">5</span><span class="stat-l">Done</span></div></div></article>'
         for theme in sorted(THEMES)
     )
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Project dashboard themes</title><style>{_theme_css()}
 .preview {{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1rem; }}
-.preview-card {{ margin:0; min-height:13rem; }}
+.preview-card {{ margin:0; min-height:13rem; background:var(--page); color:var(--ink); }}
 @media (max-width: 40rem) {{ .preview {{ grid-template-columns:1fr; }} }}
 @media print {{ .preview {{ grid-template-columns:repeat(2, minmax(0, 1fr)); }} }}
 </style></head><body data-theme="clean"><main class="shell"><header><p class="eyebrow">No JavaScript · print safe</p><h1>Theme preview</h1></header><section class="preview">{cards}</section></main></body></html>'''

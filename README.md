@@ -43,7 +43,7 @@ The patch may contain only `sources`, `evidence`, `updates`, `tasks`, and `decis
 
 | File | Meaning |
 | --- | --- |
-| `index.html` | Self-contained static dashboard with no remote assets or scripts |
+| `index.html` | Self-contained static dashboard with no remote assets or scripts — hero header, status stat band, numbered workflow steps, dot timeline, and color-coded status pills; labels follow `meta.language` (Chinese for `zh*`, English otherwise) |
 | `project.private.json`, `project.team.json`, or `project.public.json` | Audience-filtered machine-readable view |
 | `brief.md` | Short audience-filtered status summary |
 | `manifest.json` | SHA-256 hashes for the three files above |

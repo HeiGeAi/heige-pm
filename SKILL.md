@@ -18,7 +18,7 @@ Build and maintain a local static project dashboard from untrusted source materi
 ## Required workflow
 
 1. Scope the project, requested audience, input set, existing truth source, and output boundary. Read an existing `project.json`, `STATUS.md`, or `HANDOFF.md` before extracting updates.
-2. Confirm the theme before initialization. Use `warm` when the user has no preference; alternatives are `clean`, `dark`, and `paper`. Use `preview` when visual choice matters.
+2. Confirm the theme and `meta.language` before initialization. Use `warm` (the flagship editorial palette: cream canvas, single orange accent) when the user has no preference; alternatives are `clean`, `dark`, and `paper`. Use `preview` when visual choice matters. A `meta.language` starting with `zh` renders the dashboard and brief with Chinese labels; any other language renders English labels.
 3. Acquire sources read-only and record truncation, pagination, parser, and access limits. Follow [ingestion](references/ingestion.md).
 4. Pin each source in `sources` before making claims from it. Prefer hashing the authorized source in place. Record a stable source ID, type, safe locator, SHA-256 of the acquired bytes, source revision when available, read time, and sensitivity. Create a snapshot only under the private-source controls in [ingestion](references/ingestion.md).
 5. Extract into the canonical model in [schema](references/schema.md), and keep `meta.skill_version` synchronized with [VERSION](VERSION) as SemVer. Reuse existing IDs. Create IDs once from durable business identity, not list position, wording, or current date.
