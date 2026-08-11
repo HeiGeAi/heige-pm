@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "schema_version": "1.0",
+    "skill_version": "1.0.0",
+    "theme": "warm",
+    "audience": "private",
+    "language": "en",
+    "updated_at": "2026-01-15T09:00:00Z"
+  },
+  "project": {
+    "id": "project-lantern",
+    "name": "Synthetic Project Lantern",
+    "goal": "Maintain a traceable local static project dashboard.",
+    "milestones": [
+      {
+        "id": "milestone-local-review",
+        "name": "Review the local dashboard",
+        "due_date": "2026-01-31",
+        "visibility": "team"
+      }
+    ],
+    "cadence": "weekly"
+  },
+  "workflow": [
+    {
+      "id": "stage-local-first",
+      "name": "Local review",
+      "description": "Validate the local dashboard before considering an external target.",
+      "human_gate": true,
+      "visibility": "team"
+    }
+  ],
+  "members": [
+    {
+      "id": "member-coordinator",
+      "display_name": "Project coordinator",
+      "responsibility": "Maintain the canonical project record.",
+      "visibility": "team"
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-initial-plan",
+      "type": "markdown",
+      "location": "evals/fixtures/initial-plan.md",
+      "sha256": "f5258c718b8c2522fee5795d5faf67ec31a67b97697e4349bafbad9e842f86b1",
+      "revision": "revision-3",
+      "read_at": "2026-01-15T09:00:00Z",
+      "sensitivity": "team"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-build-dashboard",
+      "revision": 4,
+      "description": "Build the local static dashboard.",
+      "owner": "member-coordinator",
+      "reported_status": "in_progress",
+      "verification_level": "local_verified",
+      "approval_state": "draft",
+      "visibility": "team",
+      "due_date": "2026-01-24",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-initial-plan"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-local-first",
+      "revision": 3,
+      "topic": "Delivery order",
+      "conclusion": "Deliver a local static dashboard before considering external hosting.",
+      "decision_state": "decided",
+      "decided_by": "member-coordinator",
+      "source_refs": [
+        "src-initial-plan"
+      ],
+      "decided_at": "2026-01-15T09:10:00Z",
+      "supersedes": [],
+      "visibility": "team"
+    }
+  ],
+  "updates": [
+    {
+      "id": "update-initial-plan",
+      "date": "2026-01-15",
+      "title": "Local-first plan recorded",
+      "summary": "The local dashboard is in progress and locally checked.",
+      "sections": [],
+      "task_changes": [],
+      "risks": [],
+      "learnings": [],
+      "source_refs": [
+        "src-initial-plan"
+      ],
+      "visibility": "team"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-local-check",
+      "task_id": "task-build-dashboard",
+      "artifact": "evals/fixtures/local-check.txt",
+      "command": "local static check",
+      "sha256": "0cbd3f5c4a51679ec94dbd8b97a475f8f3150dba5e09396dcbcec0f4e81d602f",
+      "target": "local",
+      "recorded_at": "2026-01-15T09:20:00Z",
+      "result": "passed",
+      "source_refs": [
+        "src-initial-plan"
+      ],
+      "visibility": "team"
+    }
+  ],
+  "deliveries": []
+}

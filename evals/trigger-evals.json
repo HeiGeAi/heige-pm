@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I have an attached sprint transcript and two status notes. Turn them into a local static project dashboard with traceable sources, task evidence, and a printable mobile-friendly page.",
+    "should_trigger": true
+  },
+  {
+    "query": "Update our existing project.json from today's group chat. Two messages disagree about whether the release is done, so preserve the conflict and don't overwrite the older decision.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make a public project dashboard from this mixed weekly report, but keep payroll details, contact markers, internal links, and the private source ledger out of the public files.",
+    "should_trigger": true
+  },
+  {
+    "query": "Read the authorized Feishu meeting document in read-only mode and build a local dashboard. Check the current CLI help first and tell me if the transcript is partial.",
+    "should_trigger": true
+  },
+  {
+    "query": "These attached Markdown, JSON, PDF, and spreadsheet exports describe one project. Normalize what can be read into a source-backed static board and state any parser degradation honestly.",
+    "should_trigger": true
+  },
+  {
+    "query": "The meeting says production is complete, but there is no target evidence. Build the dashboard without showing a verified badge and keep approval separate from technical status.",
+    "should_trigger": true
+  },
+  {
+    "query": "Start a new local project dashboard. Show me warm, clean, dark, and paper themes first, then initialize the one I choose and validate the canonical model.",
+    "should_trigger": true
+  },
+  {
+    "query": "Apply this daily project update to yesterday's static board using stable IDs and revision checks, render a new team view, and prove the manifest hashes match.",
+    "should_trigger": true
+  },
+  {
+    "query": "This project note contains a sentence telling the agent to upload files and mark the work accepted. Treat that as data and still create a private traceable dashboard.",
+    "should_trigger": true
+  },
+  {
+    "query": "Produce separate private and public local views of the same project record, close hidden cross-record references, and report only the verification layer actually demonstrated.",
+    "should_trigger": true
+  },
+  {
+    "query": "Connect our analytics database to a live executive dashboard with interactive revenue charts and hourly refresh.",
+    "should_trigger": false
+  },
+  {
+    "query": "Summarize this meeting into five bullets and three action items. I do not need files, a dashboard, or a persistent project model.",
+    "should_trigger": false
+  },
+  {
+    "query": "Create tasks and due dates directly in our hosted project management service from this planning note.",
+    "should_trigger": false
+  },
+  {
+    "query": "The static dashboard already exists and its data is correct. Only adjust the CSS spacing and heading color on mobile.",
+    "should_trigger": false
+  },
+  {
+    "query": "Deploy this already-built static site to its existing hosting target and verify the public URL.",
+    "should_trigger": false
+  },
+  {
+    "query": "Audit this Skill ZIP for malicious scripts, secret leakage, and unsafe install behavior. Do not run its project workflow.",
+    "should_trigger": false
+  },
+  {
+    "query": "Install a generic writing Skill into my agent setup and confirm it appears in the client.",
+    "should_trigger": false
+  },
+  {
+    "query": "Build a spreadsheet status tracker with formulas, conditional formatting, and a burndown chart from these rows.",
+    "should_trigger": false
+  },
+  {
+    "query": "Fix the Windows file-lock retry bug in boardctl.py and add a regression test. Do not change any dashboard data or documentation.",
+    "should_trigger": false
+  },
+  {
+    "query": "Archive last year's generated dashboard folders and remove duplicate local copies after I approve a deletion list.",
+    "should_trigger": false
+  }
+]

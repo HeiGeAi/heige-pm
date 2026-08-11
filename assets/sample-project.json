@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "schema_version": "1.0",
+    "skill_version": "1.0.0",
+    "theme": "warm",
+    "audience": "private",
+    "language": "en",
+    "updated_at": "2026-08-10T08:00:00Z"
+  },
+  "project": {
+    "id": "project-sunrise",
+    "name": "Synthetic Project Sunrise",
+    "goal": "Create a traceable project dashboard from synthetic updates.",
+    "milestones": [
+      {
+        "id": "milestone-alpha",
+        "name": "Review the first dashboard",
+        "due_date": "2026-08-31",
+        "visibility": "team"
+      }
+    ],
+    "cadence": "weekly"
+  },
+  "workflow": [
+    {
+      "id": "stage-plan",
+      "name": "Plan",
+      "description": "Review scope before implementation.",
+      "human_gate": true,
+      "visibility": "team"
+    }
+  ],
+  "members": [
+    {
+      "id": "member-coordinator",
+      "display_name": "Project coordinator",
+      "responsibility": "Maintain the synthetic project record.",
+      "visibility": "team"
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-kickoff",
+      "type": "text",
+      "location": "https://example.test/sources/kickoff",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": "revision-1",
+      "read_at": "2026-08-10T08:00:00Z",
+      "sensitivity": "private"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-plan",
+      "revision": 1,
+      "description": "Review the dashboard plan.",
+      "owner": "member-coordinator",
+      "reported_status": "in_progress",
+      "verification_level": "source_backed",
+      "approval_state": "reviewed",
+      "visibility": "team",
+      "due_date": "2026-08-20",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-kickoff"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-scope",
+      "revision": 1,
+      "topic": "Initial scope",
+      "conclusion": "Build a local static dashboard first.",
+      "decision_state": "decided",
+      "decided_by": "member-coordinator",
+      "source_refs": [
+        "src-kickoff"
+      ],
+      "decided_at": "2026-08-10T08:10:00Z",
+      "supersedes": []
+    }
+  ],
+  "updates": [
+    {
+      "id": "update-day-one",
+      "date": "2026-08-10",
+      "title": "Synthetic kickoff",
+      "summary": "The initial scope was reviewed.",
+      "sections": [],
+      "task_changes": [],
+      "risks": [],
+      "learnings": [],
+      "source_refs": [
+        "src-kickoff"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-source-review",
+      "task_id": "task-plan",
+      "artifact": "Synthetic source ledger entry",
+      "command": "",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "target": "local",
+      "recorded_at": "2026-08-10T08:15:00Z",
+      "result": "passed",
+      "source_refs": [
+        "src-kickoff"
+      ]
+    }
+  ],
+  "deliveries": []
+}
