@@ -80,13 +80,11 @@ Heige PM 把真相源钉死在一份 `project.json` 和一本来源台账上，�
 
 仓库自带一套**全虚构**的中文示例 [examples/demo-board](examples/demo-board)：8 个任务、5 个里程碑、带人工闸门的流程、一条被 `supersedes` 改写的决策、一条故意留着的冲突任务。private 和 team 两份渲染产物都已提交，不跑命令也能直接翻。
 
-| 暗色主题 | 窄屏 390px |
-|:--:|:--:|
-| <img src="docs/images/example-dark.png" width="440" alt="dark 主题看板" /> | <img src="docs/images/example-warm-mobile.png" width="220" alt="窄屏下的看板" /> |
-
-四套主题一图对比：
-
-<div align="center"><img src="docs/images/example-themes.png" width="70%" alt="warm / clean / dark / paper 四主题预览" /></div>
+| 预览 | 看点 |
+|:--:|:--|
+| <img src="docs/images/example-dark.png" width="480" alt="dark 主题看板" /> | **dark 主题** <br> 同一份数据，一个参数换主题。深色适合投屏和挂墙大屏。 |
+| <img src="docs/images/example-themes.png" width="480" alt="warm / clean / dark / paper 四主题预览" /> | **四套主题一图对比** <br> warm / clean / dark / paper。`preview` 命令一键生成这张对比页，选完再 init。 |
+| <img src="docs/images/example-warm-mobile.png" width="230" alt="窄屏下的看板" /> | **窄屏 390px** <br> 无固定像素宽，手机直接看，40rem 以下自动收成单列。打印重置为黑白，纸上也是一份能读的报告。 |
 
 本地复现示例：
 
