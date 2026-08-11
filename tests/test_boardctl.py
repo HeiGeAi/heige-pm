@@ -1366,6 +1366,25 @@ class BoardctlTests(unittest.TestCase):
         project["meta"].pop("language")
         self.assertIn('lang="und"', self.boardctl().render_html(project, "private"))
 
+    def test_render_shows_milestones_and_unassigned_owner_fallback(self):
+        project = self.valid_project()
+        project["meta"]["language"] = "zh-CN"
+        project["tasks"][0].pop("owner", None)
+
+        page = self.boardctl().render_html(project, "private")
+        self.assertIn("里程碑", page)
+        self.assertIn('class="mstone"', page)
+        self.assertIn("Review the first dashboard", page)
+        self.assertIn("待指派", page)
+
+        project["meta"]["language"] = "en"
+        english = self.boardctl().render_html(project, "private")
+        self.assertIn("Milestones", english)
+        self.assertIn("Unassigned", english)
+
+        public = self.boardctl().render_html(project, "public")
+        self.assertNotIn('class="mstone"', public)
+
     def test_brief_escapes_markdown_metacharacters(self):
         project = self.valid_project()
         project["project"]["name"] = "[unsafe](javascript:alert(1)) # title"
@@ -1847,9 +1866,12 @@ class BoardctlTests(unittest.TestCase):
             with mock.patch.dict(os.environ, {"HOME": str(home), "CODEX_HOME": str(codex_home)}, clear=False):
                 claude_target = self.boardctl().install_skill(skill, "claude")
                 codex_target = self.boardctl().install_skill(skill, "codex")
+                workbuddy_target = self.boardctl().install_skill(skill, "workbuddy")
 
             self.assertEqual(home / ".claude" / "skills" / "portable-skill", claude_target)
             self.assertEqual(home / ".agents" / "skills" / "portable-skill", codex_target)
+            self.assertEqual(home / ".workbuddy" / "skills" / "portable-skill", workbuddy_target)
+            self.assertEqual((skill / "SKILL.md").read_bytes(), (workbuddy_target / "SKILL.md").read_bytes())
             self.assertEqual((skill / "SKILL.md").read_bytes(), (claude_target / "SKILL.md").read_bytes())
             with self.assertRaisesRegex(FileExistsError, r"already exists"):
                 self.boardctl().install_skill(skill, "claude", home / ".claude" / "skills")

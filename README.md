@@ -64,11 +64,12 @@ Use `--target workbuddy` for a root-level ZIP intended for WorkBuddy UI import, 
 
 ## Local Skill installation
 
-Claude Code installs by default beneath `$HOME/.claude/skills`. Codex installs by default beneath the current user's `$HOME/.agents/skills` root:
+Claude Code installs by default beneath `$HOME/.claude/skills`. Codex installs by default beneath the current user's `$HOME/.agents/skills` root. WorkBuddy (Tencent CodeBuddy desktop) installs beneath `$HOME/.workbuddy/skills`:
 
 ```bash
 python3 scripts/boardctl.py install --skill-dir . --target claude
 python3 scripts/boardctl.py install --skill-dir . --target codex
+python3 scripts/boardctl.py install --skill-dir . --target workbuddy
 ```
 
 The Codex installer does not read `CODEX_HOME`. Use `--destination` only when the user explicitly selects a legacy or alternate root. Existing destinations are refused unless `--force` is explicitly authorized.

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.1.0 — 2026-08-11
+
+WorkBuddy runtime support and two renderer additions. The data contract, validation, and merge behavior are unchanged.
+
+WorkBuddy 运行环境适配，外加两处渲染增强。数据契约、校验与合并行为不变。
+
+- `install --target workbuddy` installs to `$HOME/.workbuddy/skills`, with the same conflict refusal, hash verification, and `--force` backup behavior as the other targets. Verified against WorkBuddy's bundled Python 3.13.12 on macOS; see [agent compatibility](references/agent-compatibility.md) for the exact claim boundary.
+- The dashboard now renders `project.milestones` as a card grid (due date plus name) above the task section, respecting per-milestone audience visibility.
+- A task with no resolvable owner now shows an explicit Unassigned (待指派) label instead of omitting the owner line.
+- `SKILL.md` description gains a Chinese trigger sentence so Chinese-first clients match Chinese requests reliably.
+
 ## 2.0.0 — 2026-08-11
 
 Renderer overhaul. The canonical data contract, CLI flags, validation, and merge behavior are unchanged; the rendered dashboard, brief, and theme preview are redesigned. The HTML structure and class names changed, which is why this is a major version.

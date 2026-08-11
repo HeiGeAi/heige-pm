@@ -841,6 +841,8 @@ LABELS = {
         "audience.public": "Public view",
         "updated": "Updated",
         "tasks": "Current tasks",
+        "milestones": "Milestones",
+        "unassigned": "Unassigned",
         "workflow": "Workflow gates",
         "members": "Team roles",
         "timeline": "Update timeline",
@@ -899,6 +901,8 @@ LABELS = {
         "audience.public": "公开视图",
         "updated": "最近更新",
         "tasks": "当前任务",
+        "milestones": "里程碑",
+        "unassigned": "待指派",
         "workflow": "流程闸门",
         "members": "团队分工",
         "timeline": "推进时间线",
@@ -986,6 +990,10 @@ details > article { box-shadow: none; border-radius: .9rem; }
 summary { cursor: pointer; color: var(--accent-deep); font-weight: 600; }
 .none { color: var(--muted); font-size: .9rem; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: .8rem; }
+.mstones { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .8rem; }
+.mstone { background: var(--card); border: 1px solid var(--line); border-left: .35rem solid var(--accent); border-radius: 1rem; padding: .8rem 1rem .7rem; box-shadow: var(--shadow); }
+.mstone time { font-size: .78rem; font-weight: 600; letter-spacing: .04em; color: var(--accent-deep); }
+.mstone h3 { margin: .2rem 0 0; font-size: .95rem; }
 .stat { background: var(--card); border: 1px solid var(--line); border-top: .25rem solid var(--line); border-radius: 1rem; padding: .8rem 1rem .7rem; box-shadow: var(--shadow); }
 .stat.accent { border-top-color: var(--accent); } .stat.ok { border-top-color: var(--ok); } .stat.bad { border-top-color: var(--bad); } .stat.warn { border-top-color: var(--warn); }
 .stat-n { display: block; font-family: Georgia, "Songti SC", serif; font-size: 1.9rem; line-height: 1.15; }
@@ -1080,6 +1088,10 @@ def render_html(project: dict[str, Any], audience: str = "private", theme: str |
             meta_parts.append(f"{labels['owner']}{colon}{member_names[owner]}")
         elif item.get("owner_summary"):
             meta_parts.append(f"{labels['owner']}{colon}{labels['restricted_member']}")
+        elif isinstance(owner, str) and owner:
+            meta_parts.append(f"{labels['owner']}{colon}{_display(owner)}")
+        else:
+            meta_parts.append(f"{labels['owner']}{colon}{labels['unassigned']}")
         if item.get("due_date"):
             meta_parts.append(f"{labels['due']}{colon}{_display(item.get('due_date'))}")
         blocked = (
@@ -1175,11 +1187,28 @@ def render_html(project: dict[str, Any], audience: str = "private", theme: str |
             + "</section>"
         )
 
+    milestones_section = ""
+    milestones = data["project"].get("milestones")
+    if isinstance(milestones, list):
+        milestone_cards = "".join(
+            '<article class="mstone">'
+            f'<time>{_display(item.get("due_date"), labels["not_recorded"])}</time>'
+            f'<h3>{_display(item.get("name"), labels["not_recorded"])}</h3>'
+            "</article>"
+            for item in milestones
+            if isinstance(item, dict)
+        )
+        if milestone_cards:
+            milestones_section = (
+                f'<section><h2>{labels["milestones"]}</h2>'
+                f'<div class="mstones">{milestone_cards}</div></section>'
+            )
+
     audience_label = labels.get(f"audience.{audience}", _display(audience))
     return f"""<!doctype html>
 <html lang="{html.escape(_language(project), quote=True)}" data-theme="{theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{_display(data['project'].get('name'), labels['not_recorded'])}</title><style>{_theme_css()}</style></head>
 <body><div class="shell"><header><p class="eyebrow">{labels['eyebrow']} · {audience_label}</p><h1>{_display(data['project'].get('name'), labels['not_recorded'])}</h1><p class="goal">{_display(data['project'].get('goal'), labels['not_recorded'])}</p><p class="meta">{labels['updated']}{colon}{_display(data['meta'].get('updated_at'), labels['not_recorded'])}</p></header>
-<main><section aria-labelledby="tasks-title"><h2 id="tasks-title">{labels['tasks']}</h2><div class="stats">{stat_cards}</div>{cards(tasks, task_card)}</section>
+<main>{milestones_section}<section aria-labelledby="tasks-title"><h2 id="tasks-title">{labels['tasks']}</h2><div class="stats">{stat_cards}</div>{cards(tasks, task_card)}</section>
 <div class="grid"><section><h2>{labels['workflow']}</h2>{steps}</section><section><h2>{labels['members']}</h2>{members_html}</section></div>
 <section><h2>{labels['timeline']}</h2><div class="timeline">{timeline}</div></section>
 <section><h2>{labels['decisions']}</h2>{decisions}</section>{deliveries_section}
@@ -1643,6 +1672,8 @@ def _install_root(target: str) -> Path:
         return home / ".claude" / "skills"
     if target == "codex":
         return home / ".agents" / "skills"
+    if target == "workbuddy":
+        return home / ".workbuddy" / "skills"
     raise ValueError(f"target: invalid value {target!r}")
 
 
@@ -1766,7 +1797,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     install_parser = commands.add_parser("install", help="Install a verified local skill copy.")
     install_parser.add_argument("--skill-dir", required=True)
-    install_parser.add_argument("--target", choices=("claude", "codex"), required=True)
+    install_parser.add_argument("--target", choices=("claude", "codex", "workbuddy"), required=True)
     install_parser.add_argument("--destination")
     install_parser.add_argument("--force", action="store_true")
     return parser

@@ -1,6 +1,6 @@
 ---
 name: heige-pm
-description: Use when an agent needs to turn meeting notes, project updates, chats, Feishu content, or local files into a traceable static project dashboard, or maintain its canonical project data, source ledger, revisions, conflicts, or audience views. Do not use for CSS-only edits, deployment-only work, archiving, or deletion.
+description: Use when an agent needs to turn meeting notes, project updates, chats, Feishu content, or local files into a traceable static project dashboard, or maintain its canonical project data, source ledger, revisions, conflicts, or audience views. 触发条件：需要把会议纪要、项目进展、聊天记录、飞书内容或本地文件整理成可溯源的静态项目看板，或维护看板的数据、来源台账、版本与受众视图时使用。Do not use for CSS-only edits, deployment-only work, archiving, or deletion. 纯改样式、纯部署、归档或删除类任务不要用。
 ---
 
 # Heige PM

@@ -58,7 +58,23 @@ The output must be outside the source directory. The package builder rejects uns
 
 ## WorkBuddy
 
-WorkBuddy UI import expects the ZIP root itself to contain `SKILL.md` and `VERSION`, so use:
+WorkBuddy (Tencent CodeBuddy desktop) discovers manually installed Skills from `$HOME/.workbuddy/skills/<skill-name>/`. From the Skill directory, local installation is:
+
+```bash
+python3 scripts/boardctl.py install --skill-dir . --target workbuddy
+```
+
+The same conflict refusal, `--force` backup behavior, and hash verification apply as for the Claude Code target.
+
+Verified runtime facts (macOS, WorkBuddy sandbox, 2026-08-11):
+
+- WorkBuddy sessions run inside a sandbox whose `PATH` puts a bundled Python first (observed: CPython 3.13.12 under `$HOME/.workbuddy/binaries/python/`). `boardctl.py` is standard-library only and its full test suite plus `init`/`validate`/`render` passed on that interpreter.
+- The sandbox shims `rm`, `unlink`, and `rmdir` with safe-delete wrappers. `boardctl.py` does not shell out, so this does not affect it.
+- Marketplace imports add `_skillhub_meta.json`, `_meta.json`, and `_icon.svg` beside `SKILL.md`. A plain directory copy without those files was still discovered and executed by a real WorkBuddy session on the date above, so they are not required for manual installs.
+
+Claim boundary: the runtime facts above come from one exercised WorkBuddy session on one machine. Trigger-based discovery in a fresh session, other WorkBuddy versions, and other platforms remain unverified until exercised there.
+
+For ZIP import through the WorkBuddy UI instead of a directory install, the ZIP root itself must contain `SKILL.md` and `VERSION`:
 
 ```bash
 python3 scripts/boardctl.py package --skill-dir . --target workbuddy --output ../heige-pm-workbuddy.zip
