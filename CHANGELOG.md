@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.1 — 2026-08-11
+
+Adds a runnable example and fixes an audience-filter defect found while building it.
+
+补一份可复现的示例看板，并修掉造示例时暴露的受众过滤缺陷。
+
+- Fix: a task with an empty `owner` (or a decision with an empty `decided_by`) was filtered into a "restricted hidden member" summary, which invented a hidden person who does not exist. Empty values now stay empty and render as Unassigned (待指派). Audience JSON no longer carries a false `owner_summary` for unowned tasks.
+- New [examples/demo-board](examples/demo-board): a fully synthetic Chinese project with 8 tasks, 5 milestones, a superseding decision, a preserved conflict, and both `private` and `team` renders committed so the audience boundary is inspectable without running anything.
+- README now leads with rendered screenshots of that example plus the four-theme preview.
+
 ## 2.1.0 — 2026-08-11
 
 WorkBuddy runtime support and two renderer additions. The data contract, validation, and merge behavior are unchanged.

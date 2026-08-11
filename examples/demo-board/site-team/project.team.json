@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "schema_version": "1.0",
+    "skill_version": "2.1.1",
+    "theme": "warm",
+    "audience": "team",
+    "language": "zh-CN",
+    "updated_at": "2026-08-11T09:30:00+08:00"
+  },
+  "project": {
+    "id": "project-demo-membership",
+    "name": "示例科技 · 会员小程序改版",
+    "goal": "把会员小程序的下单转化率从 2.1% 提到 3.5%，并把每周发版从手工部署换成流水线。",
+    "cadence": "每周一晨会同步，周五出周报",
+    "milestones": [
+      {
+        "id": "ms-scope",
+        "name": "改版范围与埋点口径评审通过",
+        "due_date": "2026-08-15"
+      },
+      {
+        "id": "ms-design",
+        "name": "下单主流程设计稿定稿",
+        "due_date": "2026-08-21"
+      },
+      {
+        "id": "ms-beta",
+        "name": "灰度 10% 用户开放",
+        "due_date": "2026-09-05"
+      },
+      {
+        "id": "ms-pipeline",
+        "name": "发版流水线接管全部环境",
+        "due_date": "2026-09-12"
+      },
+      {
+        "id": "ms-launch",
+        "name": "全量上线并出首周复盘",
+        "due_date": "2026-09-26"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "src-weekly-0810",
+      "type": "meeting_notes",
+      "location": "https://example.test/notes/2026-08-10-weekly",
+      "revision": "rev-8",
+      "read_at": "2026-08-11T09:00:00+08:00"
+    },
+    {
+      "id": "src-chat-0810",
+      "type": "chat",
+      "location": "https://example.test/chat/product-channel",
+      "revision": "rev-233",
+      "read_at": "2026-08-11T09:05:00+08:00"
+    },
+    {
+      "id": "src-tracking-doc",
+      "type": "doc",
+      "location": "https://example.test/docs/tracking-spec",
+      "revision": "v3",
+      "read_at": "2026-08-11T09:10:00+08:00"
+    },
+    {
+      "id": "src-ci-log",
+      "type": "file",
+      "revision": "run-141",
+      "read_at": "2026-08-11T09:12:00+08:00"
+    }
+  ],
+  "workflow": [
+    {
+      "id": "stage-intake",
+      "name": "需求收口",
+      "description": "把散落在会议、群聊、工单里的诉求收敛成一份带优先级的清单。",
+      "human_gate": false
+    },
+    {
+      "id": "stage-scope",
+      "name": "范围评审",
+      "description": "产品与工程一起确认本期做什么、不做什么，范围变更必须走这一步。",
+      "human_gate": true
+    },
+    {
+      "id": "stage-build",
+      "name": "实现与自测",
+      "description": "按任务拆分实现，每个任务自带可回放的验证记录。",
+      "human_gate": false
+    },
+    {
+      "id": "stage-release",
+      "name": "灰度放量",
+      "description": "灰度比例每次调整都要有人签字，指标不达标就回滚。",
+      "human_gate": true
+    }
+  ],
+  "members": [
+    {
+      "id": "member-pm",
+      "display_name": "林一",
+      "responsibility": "产品负责人，维护范围与优先级"
+    },
+    {
+      "id": "member-fe",
+      "display_name": "周舟",
+      "responsibility": "小程序前端，负责下单主流程"
+    },
+    {
+      "id": "member-be",
+      "display_name": "陈默",
+      "responsibility": "服务端与发版流水线"
+    },
+    {
+      "id": "member-design",
+      "display_name": "苏禾",
+      "responsibility": "交互与视觉，负责设计稿与走查"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-checkout",
+      "description": "下单主流程改版：把四步收敛成两步，保留地址与优惠券的回填",
+      "owner": "member-fe",
+      "reported_status": "in_progress",
+      "verification_level": "local_verified",
+      "approval_state": "draft",
+      "due_date": "2026-08-20",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-weekly-0810",
+        "src-chat-0810"
+      ],
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "task-tracking",
+      "description": "补齐下单漏斗埋点，口径以埋点文档 v3 为准",
+      "owner": "member-be",
+      "reported_status": "in_progress",
+      "verification_level": "source_backed",
+      "approval_state": "reviewed",
+      "due_date": "2026-08-18",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-tracking-doc"
+      ],
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "task-design-review",
+      "description": "下单主流程设计稿走查，含空态与失败态",
+      "owner": "member-design",
+      "reported_status": "blocked",
+      "verification_level": "source_report",
+      "approval_state": "draft",
+      "due_date": "2026-08-19",
+      "blocked_reason": "等业务方确认优惠券是否保留叠加规则",
+      "source_refs": [
+        "src-weekly-0810"
+      ],
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "task-coupon-rule",
+      "description": "优惠券叠加规则：会上说保留，群里说本期砍掉，未收口",
+      "owner": "member-pm",
+      "reported_status": "conflict",
+      "verification_level": "source_report",
+      "approval_state": "draft",
+      "due_date": "2026-08-15",
+      "blocked_reason": "两份来源结论相反，等范围评审拍板",
+      "source_refs": [
+        "src-weekly-0810",
+        "src-chat-0810"
+      ],
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "task-pipeline",
+      "description": "发版流水线接管测试环境，构建产物带哈希留档",
+      "owner": "member-be",
+      "reported_status": "done",
+      "verification_level": "e2e_verified",
+      "approval_state": "accepted",
+      "due_date": "2026-08-11",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-ci-log"
+      ],
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "task-grey",
+      "description": "灰度放量方案：分档比例、观测指标、回滚条件写成一页",
+      "owner": "member-pm",
+      "reported_status": "not_started",
+      "verification_level": "none",
+      "approval_state": "draft",
+      "due_date": "2026-08-28",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-weekly-0810"
+      ],
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "task-perf",
+      "description": "首屏性能基线复测，目标 P95 低于 1.8 秒",
+      "owner": "",
+      "reported_status": "not_started",
+      "verification_level": "none",
+      "approval_state": "draft",
+      "due_date": "2026-08-26",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-weekly-0810"
+      ],
+      "source_summary": "Visible source"
+    }
+  ],
+  "decisions": [],
+  "updates": [],
+  "evidence": [],
+  "deliveries": [
+    {
+      "id": "delivery-board",
+      "name": "每周项目看板（团队视图）",
+      "description": "每周五渲染一份 team 视图，私有预算记录不进这份产物。",
+      "source_summary": "Visible source"
+    },
+    {
+      "id": "delivery-brief",
+      "name": "一页周报 brief.md",
+      "description": "给业务方看的短摘要，只讲状态、卡点、下一步。",
+      "source_summary": "Visible source"
+    }
+  ]
+}

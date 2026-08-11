@@ -1,0 +1,453 @@
+{
+  "meta": {
+    "schema_version": "1.0",
+    "skill_version": "2.1.1",
+    "theme": "warm",
+    "audience": "private",
+    "language": "zh-CN",
+    "updated_at": "2026-08-11T09:30:00+08:00"
+  },
+  "project": {
+    "id": "project-demo-membership",
+    "name": "示例科技 · 会员小程序改版",
+    "goal": "把会员小程序的下单转化率从 2.1% 提到 3.5%，并把每周发版从手工部署换成流水线。",
+    "milestones": [
+      {
+        "id": "ms-scope",
+        "name": "改版范围与埋点口径评审通过",
+        "due_date": "2026-08-15",
+        "visibility": "team"
+      },
+      {
+        "id": "ms-design",
+        "name": "下单主流程设计稿定稿",
+        "due_date": "2026-08-21",
+        "visibility": "team"
+      },
+      {
+        "id": "ms-beta",
+        "name": "灰度 10% 用户开放",
+        "due_date": "2026-09-05",
+        "visibility": "team"
+      },
+      {
+        "id": "ms-pipeline",
+        "name": "发版流水线接管全部环境",
+        "due_date": "2026-09-12",
+        "visibility": "team"
+      },
+      {
+        "id": "ms-launch",
+        "name": "全量上线并出首周复盘",
+        "due_date": "2026-09-26",
+        "visibility": "public"
+      }
+    ],
+    "cadence": "每周一晨会同步，周五出周报"
+  },
+  "workflow": [
+    {
+      "id": "stage-intake",
+      "name": "需求收口",
+      "description": "把散落在会议、群聊、工单里的诉求收敛成一份带优先级的清单。",
+      "human_gate": false,
+      "visibility": "team"
+    },
+    {
+      "id": "stage-scope",
+      "name": "范围评审",
+      "description": "产品与工程一起确认本期做什么、不做什么，范围变更必须走这一步。",
+      "human_gate": true,
+      "visibility": "team"
+    },
+    {
+      "id": "stage-build",
+      "name": "实现与自测",
+      "description": "按任务拆分实现，每个任务自带可回放的验证记录。",
+      "human_gate": false,
+      "visibility": "team"
+    },
+    {
+      "id": "stage-release",
+      "name": "灰度放量",
+      "description": "灰度比例每次调整都要有人签字，指标不达标就回滚。",
+      "human_gate": true,
+      "visibility": "team"
+    }
+  ],
+  "members": [
+    {
+      "id": "member-pm",
+      "display_name": "林一",
+      "responsibility": "产品负责人，维护范围与优先级",
+      "visibility": "team"
+    },
+    {
+      "id": "member-fe",
+      "display_name": "周舟",
+      "responsibility": "小程序前端，负责下单主流程",
+      "visibility": "team"
+    },
+    {
+      "id": "member-be",
+      "display_name": "陈默",
+      "responsibility": "服务端与发版流水线",
+      "visibility": "team"
+    },
+    {
+      "id": "member-design",
+      "display_name": "苏禾",
+      "responsibility": "交互与视觉，负责设计稿与走查",
+      "visibility": "team"
+    },
+    {
+      "id": "member-sponsor",
+      "display_name": "示例科技 业务方接口人",
+      "responsibility": "预算与验收口径",
+      "visibility": "private"
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-weekly-0810",
+      "type": "meeting_notes",
+      "location": "https://example.test/notes/2026-08-10-weekly",
+      "sha256": "d9502c11b73628242a6228cd3ee872a14dd2c4887149700533a9d7c6bbde00fb",
+      "revision": "rev-8",
+      "read_at": "2026-08-11T09:00:00+08:00",
+      "sensitivity": "team"
+    },
+    {
+      "id": "src-chat-0810",
+      "type": "chat",
+      "location": "https://example.test/chat/product-channel",
+      "sha256": "4ec7600bf2454a3d478b6dfe9bfdc8f02ebfb189881db955937413e0ddf2a387",
+      "revision": "rev-233",
+      "read_at": "2026-08-11T09:05:00+08:00",
+      "sensitivity": "team"
+    },
+    {
+      "id": "src-tracking-doc",
+      "type": "doc",
+      "location": "https://example.test/docs/tracking-spec",
+      "sha256": "7407926dc710a55f9eed6a6e0f0798ae6b7e90171aa151e7f9d1122bc92efd29",
+      "revision": "v3",
+      "read_at": "2026-08-11T09:10:00+08:00",
+      "sensitivity": "team"
+    },
+    {
+      "id": "src-ci-log",
+      "type": "file",
+      "location": "artifacts/ci/2026-08-10-pipeline.log",
+      "sha256": "64bc6216854b44e8f534d7460fc149db414376791293f70f4fd1bff828fe8496",
+      "revision": "run-141",
+      "read_at": "2026-08-11T09:12:00+08:00",
+      "sensitivity": "team"
+    },
+    {
+      "id": "src-budget",
+      "type": "doc",
+      "location": "https://example.test/docs/budget-internal",
+      "sha256": "f922667417e6f68ef68df6b519e60b6e362c49447d9679e1cb28d922d9f765ac",
+      "revision": "v2",
+      "read_at": "2026-08-11T09:15:00+08:00",
+      "sensitivity": "private"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-checkout",
+      "revision": 3,
+      "description": "下单主流程改版：把四步收敛成两步，保留地址与优惠券的回填",
+      "owner": "member-fe",
+      "reported_status": "in_progress",
+      "verification_level": "local_verified",
+      "approval_state": "draft",
+      "visibility": "team",
+      "due_date": "2026-08-20",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-weekly-0810",
+        "src-chat-0810"
+      ]
+    },
+    {
+      "id": "task-tracking",
+      "revision": 2,
+      "description": "补齐下单漏斗埋点，口径以埋点文档 v3 为准",
+      "owner": "member-be",
+      "reported_status": "in_progress",
+      "verification_level": "source_backed",
+      "approval_state": "reviewed",
+      "visibility": "team",
+      "due_date": "2026-08-18",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-tracking-doc"
+      ]
+    },
+    {
+      "id": "task-design-review",
+      "revision": 2,
+      "description": "下单主流程设计稿走查，含空态与失败态",
+      "owner": "member-design",
+      "reported_status": "blocked",
+      "verification_level": "source_report",
+      "approval_state": "draft",
+      "visibility": "team",
+      "due_date": "2026-08-19",
+      "blocked_reason": "等业务方确认优惠券是否保留叠加规则",
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    },
+    {
+      "id": "task-coupon-rule",
+      "revision": 2,
+      "description": "优惠券叠加规则：会上说保留，群里说本期砍掉，未收口",
+      "owner": "member-pm",
+      "reported_status": "conflict",
+      "verification_level": "source_report",
+      "approval_state": "draft",
+      "visibility": "team",
+      "due_date": "2026-08-15",
+      "blocked_reason": "两份来源结论相反，等范围评审拍板",
+      "source_refs": [
+        "src-weekly-0810",
+        "src-chat-0810"
+      ]
+    },
+    {
+      "id": "task-pipeline",
+      "revision": 4,
+      "description": "发版流水线接管测试环境，构建产物带哈希留档",
+      "owner": "member-be",
+      "reported_status": "done",
+      "verification_level": "e2e_verified",
+      "approval_state": "accepted",
+      "visibility": "team",
+      "due_date": "2026-08-11",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-ci-log"
+      ]
+    },
+    {
+      "id": "task-grey",
+      "revision": 1,
+      "description": "灰度放量方案：分档比例、观测指标、回滚条件写成一页",
+      "owner": "member-pm",
+      "reported_status": "not_started",
+      "verification_level": "none",
+      "approval_state": "draft",
+      "visibility": "team",
+      "due_date": "2026-08-28",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    },
+    {
+      "id": "task-perf",
+      "revision": 1,
+      "description": "首屏性能基线复测，目标 P95 低于 1.8 秒",
+      "owner": "",
+      "reported_status": "not_started",
+      "verification_level": "none",
+      "approval_state": "draft",
+      "visibility": "team",
+      "due_date": "2026-08-26",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    },
+    {
+      "id": "task-budget",
+      "revision": 1,
+      "description": "二期预算与人力测算（内部口径）",
+      "owner": "member-sponsor",
+      "reported_status": "in_progress",
+      "verification_level": "source_report",
+      "approval_state": "draft",
+      "visibility": "private",
+      "due_date": "2026-08-22",
+      "blocked_reason": "",
+      "source_refs": [
+        "src-budget"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-scope-v1",
+      "revision": 1,
+      "topic": "本期改版范围",
+      "conclusion": "本期只做下单主流程与埋点，会员等级体系顺延到二期。",
+      "decision_state": "decided",
+      "decided_by": "member-pm",
+      "source_refs": [
+        "src-weekly-0810"
+      ],
+      "decided_at": "2026-08-04T10:00:00+08:00",
+      "supersedes": []
+    },
+    {
+      "id": "decision-scope-v2",
+      "revision": 1,
+      "topic": "本期改版范围（修订）",
+      "conclusion": "在原范围上追加发版流水线，因为手工部署已经连续两周拖慢发版。",
+      "decision_state": "decided",
+      "decided_by": "member-pm",
+      "source_refs": [
+        "src-weekly-0810",
+        "src-ci-log"
+      ],
+      "decided_at": "2026-08-10T10:20:00+08:00",
+      "supersedes": [
+        "decision-scope-v1"
+      ]
+    },
+    {
+      "id": "decision-coupon",
+      "revision": 1,
+      "topic": "优惠券叠加规则是否保留",
+      "conclusion": "尚未拍板，会议纪要与群聊结论相反，留待范围评审。",
+      "decision_state": "conflict",
+      "decided_by": "",
+      "source_refs": [
+        "src-weekly-0810",
+        "src-chat-0810"
+      ],
+      "decided_at": "",
+      "supersedes": []
+    }
+  ],
+  "updates": [
+    {
+      "id": "update-0804",
+      "date": "2026-08-04",
+      "title": "改版立项，范围先收窄",
+      "summary": "确认本期只碰下单主流程与埋点，避免一上来就动会员体系。",
+      "sections": [],
+      "task_changes": [],
+      "risks": [
+        "埋点口径没定，指标可能对不上"
+      ],
+      "learnings": [],
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    },
+    {
+      "id": "update-0810",
+      "date": "2026-08-10",
+      "title": "流水线追加进本期",
+      "summary": "手工部署连续两周成为发版瓶颈，决定把流水线提前到本期做，测试环境已接管。",
+      "sections": [],
+      "task_changes": [],
+      "risks": [
+        "生产环境接管还没排期"
+      ],
+      "learnings": [
+        "先接管测试环境再谈生产，风险可控"
+      ],
+      "source_refs": [
+        "src-weekly-0810",
+        "src-ci-log"
+      ]
+    },
+    {
+      "id": "update-0811",
+      "date": "2026-08-11",
+      "title": "优惠券规则出现分歧",
+      "summary": "会议纪要说保留叠加，产品群里说本期砍掉，设计走查因此卡住。",
+      "sections": [],
+      "task_changes": [],
+      "risks": [
+        "分歧不收口会连带拖住设计稿定稿"
+      ],
+      "learnings": [
+        "群聊结论不写回纪要就会变成第二个真相源"
+      ],
+      "source_refs": [
+        "src-weekly-0810",
+        "src-chat-0810"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-pipeline-run",
+      "task_id": "task-pipeline",
+      "artifact": "流水线第 141 次运行日志",
+      "command": "ci run --env staging",
+      "sha256": "64bc6216854b44e8f534d7460fc149db414376791293f70f4fd1bff828fe8496",
+      "target": "测试环境",
+      "recorded_at": "2026-08-10T21:40:00+08:00",
+      "result": "passed",
+      "source_refs": [
+        "src-ci-log"
+      ]
+    },
+    {
+      "id": "evidence-pipeline-artifact",
+      "task_id": "task-pipeline",
+      "artifact": "构建产物哈希留档",
+      "command": "",
+      "sha256": "57fc8d8ce849a247ab9f4015773d1d03af64c05c462c93198f2d82c29ae74cd9",
+      "target": "测试环境",
+      "recorded_at": "2026-08-10T21:45:00+08:00",
+      "result": "passed",
+      "source_refs": [
+        "src-ci-log"
+      ]
+    },
+    {
+      "id": "evidence-checkout-local",
+      "task_id": "task-checkout",
+      "artifact": "下单两步流程本地走查录屏",
+      "command": "",
+      "sha256": "a1dfa57df2b5962203b43649667e2d65fba628c44a59bbe524c6dc8e6bf41c2e",
+      "target": "本地",
+      "recorded_at": "2026-08-11T08:50:00+08:00",
+      "result": "passed",
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    },
+    {
+      "id": "evidence-tracking-gap",
+      "task_id": "task-tracking",
+      "artifact": "埋点对账表：3 个事件缺参数",
+      "command": "",
+      "sha256": "f105a108832e257f04a8ec87ca9d56ad077508a0658a46dae7b8172c8e5788ee",
+      "target": "本地",
+      "recorded_at": "2026-08-11T09:20:00+08:00",
+      "result": "failed",
+      "source_refs": [
+        "src-tracking-doc"
+      ]
+    }
+  ],
+  "deliveries": [
+    {
+      "id": "delivery-board",
+      "name": "每周项目看板（团队视图）",
+      "description": "每周五渲染一份 team 视图，私有预算记录不进这份产物。",
+      "visibility": "team",
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    },
+    {
+      "id": "delivery-brief",
+      "name": "一页周报 brief.md",
+      "description": "给业务方看的短摘要，只讲状态、卡点、下一步。",
+      "visibility": "team",
+      "source_refs": [
+        "src-weekly-0810"
+      ]
+    }
+  ]
+}

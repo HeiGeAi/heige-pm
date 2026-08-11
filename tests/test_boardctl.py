@@ -1385,6 +1385,22 @@ class BoardctlTests(unittest.TestCase):
         public = self.boardctl().render_html(project, "public")
         self.assertNotIn('class="mstone"', public)
 
+    def test_empty_owner_stays_unassigned_instead_of_restricted(self):
+        project = self.valid_project()
+        project["meta"]["language"] = "zh-CN"
+        project["tasks"][0]["owner"] = ""
+        project["decisions"][0]["decided_by"] = ""
+        project["decisions"][0]["visibility"] = "team"
+
+        filtered = self.boardctl().filter_for_audience(project, "team")
+        self.assertEqual("", filtered["tasks"][0]["owner"])
+        self.assertNotIn("owner_summary", filtered["tasks"][0])
+        self.assertNotIn("decided_by_summary", filtered["decisions"][0])
+
+        page = self.boardctl().render_html(project, "team")
+        self.assertIn("待指派", page)
+        self.assertNotIn("成员受限", page)
+
     def test_brief_escapes_markdown_metacharacters(self):
         project = self.valid_project()
         project["project"]["name"] = "[unsafe](javascript:alert(1)) # title"

@@ -710,7 +710,12 @@ def _genericize_hidden_reference(
     record: dict[str, Any], field: str, visible_ids: set[str], label: str
 ) -> None:
     value = record.get(field)
-    if field in record and (not isinstance(value, str) or value not in visible_ids):
+    if field not in record:
+        return
+    if value is None or (isinstance(value, str) and not value.strip()):
+        record[field] = ""
+        return
+    if not isinstance(value, str) or value not in visible_ids:
         record.pop(field, None)
         record[f"{field}_summary"] = label
 

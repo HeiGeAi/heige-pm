@@ -4,6 +4,29 @@ Heige PM is a portable Agent Skill plus a [Python standard-library CLI](scripts/
 
 It does not read arbitrary business files by itself and does not publish anything. The Agent acquires and interprets source material; `boardctl.py` validates, revision-checks, filters, renders, packages, and installs deterministically.
 
+## Example dashboard
+
+A complete synthetic example lives in [examples/demo-board](examples/demo-board): the canonical [project.json](examples/demo-board/project.json) plus both rendered audience views. Every name, date, and link in it is invented.
+
+![Rendered dashboard, warm theme, desktop width](docs/images/example-warm-desktop.png)
+
+The board is a fictional mini-program redesign with 8 tasks, 5 milestones, a human-gated workflow, a decision that supersedes an earlier one, and one task deliberately left in `conflict` because two sources disagree. Reproduce it from a clean checkout:
+
+```bash
+python3 scripts/boardctl.py validate examples/demo-board/project.json
+python3 scripts/boardctl.py render examples/demo-board/project.json --output examples/demo-board/site-private --audience private
+python3 scripts/boardctl.py render examples/demo-board/project.json --output examples/demo-board/site-team --audience team
+open examples/demo-board/site-private/index.html
+```
+
+The two renders show the audience boundary: the private budget task and the private sponsor record appear in `site-private/index.html` and are absent from `site-team/index.html` and `project.team.json`.
+
+| Narrow width | Four themes |
+| --- | --- |
+| <img src="docs/images/example-warm-mobile.png" alt="Same dashboard at 390px width" width="300"> | <img src="docs/images/example-themes.png" alt="Warm, clean, dark, and paper theme cards" width="420"> |
+
+Run `python3 scripts/boardctl.py preview --output theme-preview.html` to render that theme comparison yourself.
+
 ## Runtime support
 
 - Python 3.9 or newer with a supported standard-library file-lock backend
