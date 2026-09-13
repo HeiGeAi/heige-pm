@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.1.2 — 2026-09-25
+
+Audience-filter correctness fixes and hardening found in an independent code audit. No data contract or CLI changes.
+
+一轮独立代码审查后的受众过滤修正与健壮性加固。数据契约与 CLI 不变。
+
+- Fix: the private view no longer rewrites a dangling `owner`/`decided_by`/`task_id` reference into a "restricted" summary; genericizing is now limited to non-private audiences, and `validate` reports unknown member IDs in `tasks.owner` and `decisions.decided_by`.
+- Fix: a record referencing both visible and hidden sources now keeps the visible `source_refs` and is labeled "Partially restricted source"（部分来源受限）instead of losing all references.
+- Fix: `validate` rejects non-array `updates.sections`/`risks`/`learnings`, and the renderer falls back to the "none recorded" label for non-list values instead of joining a string character by character.
+- Fix: the pre-delivery secret scan now also detects AWS-style `AKIA` keys, Slack `xox*` tokens, and Google `AIza` API keys. The scan remains a backstop and does not replace manual de-identification review.
+- Fix: in-place merges preserve the output file's permission bits instead of silently tightening them to 0600.
+- Fix: the Windows (`msvcrt`) file-lock wait now uses exponential backoff and raises `TimeoutError` after 30 seconds instead of spinning forever.
+- Test/CI: the suite no longer requires the checkout directory to be named `heige-pm`, and a minimal GitHub Actions workflow runs the tests on Python 3.9-3.13.
+
 ## 2.1.1 — 2026-08-11
 
 Adds a runnable example and fixes an audience-filter defect found while building it.

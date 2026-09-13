@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.1.1-fa5d00.svg)
+![Version](https://img.shields.io/badge/version-2.1.2-fa5d00.svg)
 ![Claude](https://img.shields.io/badge/Claude-Skill-orange.svg)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -202,6 +202,9 @@ heige-pm/
 ## 版本历史 Version History
 
 完整记录见 [CHANGELOG.md](CHANGELOG.md)。
+
+### v2.1.2 (2026-09-25)
+- 🐛 修复独立代码审计发现的 7 处问题：private 视图不再改写悬空成员引用、混合可见来源保留可见引用、updates 列表字段类型校验、密钥扫描覆盖 AWS/Slack/Google 令牌、合并保留文件权限位、Windows 锁等待加超时退避、测试去掉目录名硬编码并接入 CI
 
 ### v2.1.1 (2026-08-11)
 - 📋 新增全虚构示例 `examples/demo-board`，双受众渲染产物直接提交进仓
