@@ -722,6 +722,8 @@ def _source_label(refs: Any, visible_source_ids: set[str]) -> tuple[str, list[st
     visible_refs = [ref for ref in refs if isinstance(ref, str) and ref in visible_source_ids]
     if len(visible_refs) == len(refs):
         return "Visible source", visible_refs
+    if visible_refs:
+        return "Partially restricted source", visible_refs
     return "Restricted hidden source", None
 
 
@@ -888,6 +890,7 @@ LABELS = {
         "no_source": "No source recorded",
         "visible_source": "Visible source",
         "restricted_source": "Restricted hidden source",
+        "partially_restricted_source": "Partially restricted source",
         "restricted_member": "Restricted member",
         "owner": "Owner",
         "due": "Due",
@@ -948,6 +951,7 @@ LABELS = {
         "no_source": "无来源记录",
         "visible_source": "来源可见",
         "restricted_source": "来源受限已隐藏",
+        "partially_restricted_source": "部分来源受限",
         "restricted_member": "成员受限",
         "owner": "负责",
         "due": "截止",
@@ -1081,6 +1085,7 @@ def render_html(project: dict[str, Any], audience: str = "private", theme: str |
     source_summaries = {
         "Visible source": labels["visible_source"],
         "Restricted hidden source": labels["restricted_source"],
+        "Partially restricted source": labels["partially_restricted_source"],
         "No source recorded": labels["no_source"],
     }
 

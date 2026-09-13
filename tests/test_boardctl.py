@@ -1107,11 +1107,46 @@ class BoardctlTests(unittest.TestCase):
         self.assertEqual(["src-public"], [source["id"] for source in public["sources"]])
         self.assertNotIn("sha256", public["sources"][0])
         self.assertNotIn("private_note", public["sources"][0])
-        self.assertNotIn("source_refs", public["updates"][0])
-        self.assertEqual("Restricted hidden source", public["updates"][0]["source_summary"])
+        self.assertEqual(["src-public"], public["updates"][0]["source_refs"])
+        self.assertEqual("Partially restricted source", public["updates"][0]["source_summary"])
         self.assertIn("src-kickoff", [source["id"] for source in team["sources"]])
         self.assertEqual("do not publish", private["sources"][-1]["private_note"])
         self.assertEqual("team", private["meta"]["audience"])
+
+    def test_partially_visible_source_refs_keep_the_visible_ones(self):
+        project = self.valid_project()
+        project["sources"].append(
+            {
+                "id": "src-public",
+                "type": "text",
+                "location": "https://example.test/public",
+                "sha256": "c" * 64,
+                "revision": "public-1",
+                "read_at": "2026-08-10T08:00:00Z",
+                "sensitivity": "team",
+            }
+        )
+        project["updates"][0]["visibility"] = "team"
+        project["updates"][0]["source_refs"] = ["src-kickoff", "src-public"]
+
+        team = self.boardctl().filter_for_audience(project, "team")
+        update = team["updates"][0]
+        self.assertEqual(["src-public"], update["source_refs"])
+        self.assertEqual("Partially restricted source", update["source_summary"])
+
+        project["sources"][0]["sensitivity"] = "team"
+        team = self.boardctl().filter_for_audience(project, "team")
+        update = team["updates"][0]
+        self.assertEqual(["src-kickoff", "src-public"], update["source_refs"])
+        self.assertEqual("Visible source", update["source_summary"])
+
+        project["sources"][0]["sensitivity"] = "private"
+        page = self.boardctl().render_html(project, "team")
+        self.assertIn("Partially restricted source", page)
+
+        project["meta"]["language"] = "zh-CN"
+        page = self.boardctl().render_html(project, "team")
+        self.assertIn("部分来源受限", page)
 
     def test_nonprivate_delivery_source_refs_are_never_exposed(self):
         for audience, source_visibility, expected_summary in (
