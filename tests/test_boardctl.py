@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 import tempfile
@@ -1045,6 +1046,19 @@ class BoardctlTests(unittest.TestCase):
 
             self.assertEqual("unchanged", output_path.read_text(encoding="utf-8"))
             self.assertEqual([], list(directory.glob(".project.json.*.tmp")))
+
+    @unittest.skipIf(os.name == "nt", "POSIX permission bits")
+    def test_atomic_write_preserves_output_permissions(self):
+        project = self.valid_project()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output_path = Path(temporary_directory) / "project.json"
+
+            self.boardctl()._write_json_atomic(output_path, project)
+            self.assertEqual(0o644, stat.S_IMODE(output_path.stat().st_mode))
+
+            os.chmod(output_path, 0o640)
+            self.boardctl()._write_json_atomic(output_path, project)
+            self.assertEqual(0o640, stat.S_IMODE(output_path.stat().st_mode))
 
     def test_init_cli_creates_a_valid_project_with_selected_theme(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

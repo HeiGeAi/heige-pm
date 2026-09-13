@@ -12,6 +12,7 @@ import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 import shutil
+import stat
 import sys
 import tempfile
 import time
@@ -655,6 +656,13 @@ def _write_json_atomic(output: str | Path, project: dict[str, Any]) -> None:
             temporary_file.write("\n")
             temporary_file.flush()
             os.fsync(temporary_file.fileno())
+        # mkstemp forces 0600; inherit the existing file's mode (0644 for new
+        # files) so merges do not silently tighten permissions.
+        try:
+            mode = stat.S_IMODE(output_path.stat().st_mode)
+        except OSError:
+            mode = 0o644
+        os.chmod(temporary_path, mode)
         os.replace(temporary_path, output_path)
     finally:
         temporary_path.unlink(missing_ok=True)
