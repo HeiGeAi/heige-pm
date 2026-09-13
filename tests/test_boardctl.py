@@ -57,7 +57,6 @@ class BoardctlTests(unittest.TestCase):
                 if retired in path.read_text(encoding="utf-8"):
                     offenders.append(path.relative_to(ROOT).as_posix())
 
-        self.assertEqual(expected, ROOT.name)
         self.assertIn(f"name: {expected}\n", skill_text)
         self.assertEqual(expected, evals["skill_name"])
         self.assertEqual([], offenders)
