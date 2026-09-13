@@ -125,6 +125,7 @@ MERGE_COLLECTIONS = frozenset((*MERGE_APPEND_COLLECTIONS, "tasks", "decisions"))
 LOCK_CONTENTION_ERRNOS = frozenset(
     {errno.EACCES, errno.EAGAIN, errno.EDEADLK, getattr(errno, "EDEADLOCK", errno.EDEADLK)}
 )
+LOCK_TIMEOUT_SECONDS = 30.0
 
 
 class MergeConflict(ValueError):
@@ -137,7 +138,12 @@ class PatchFormatError(ValueError):
 
 @contextmanager
 def exclusive_lock(path: str | Path):
-    """Hold a blocking exclusive lock backed by a persistent sidecar file."""
+    """Hold an exclusive lock backed by a persistent sidecar file.
+
+    The fcntl backend blocks in the kernel until the lock is available. The
+    msvcrt (Windows) backend polls with exponential backoff and raises
+    TimeoutError after LOCK_TIMEOUT_SECONDS.
+    """
     if _fcntl is None and _msvcrt is None:
         raise RuntimeError(
             "No supported file-lock backend is available; install Python with fcntl or msvcrt support"
@@ -158,6 +164,8 @@ def exclusive_lock(path: str | Path):
         if lock_file.tell() == 0:
             lock_file.write(b"\0")
             lock_file.flush()
+        deadline = time.monotonic() + LOCK_TIMEOUT_SECONDS
+        delay = 0.01
         while True:
             lock_file.seek(0)
             try:
@@ -166,7 +174,14 @@ def exclusive_lock(path: str | Path):
             except OSError as error:
                 if error.errno not in LOCK_CONTENTION_ERRNOS:
                     raise
-                time.sleep(0.01)
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(
+                        f"timed out after {LOCK_TIMEOUT_SECONDS:g} seconds "
+                        f"waiting for lock on {lock_path}"
+                    ) from error
+                time.sleep(min(delay, remaining))
+                delay = min(delay * 2, 0.5)
         try:
             yield
         finally:

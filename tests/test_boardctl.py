@@ -117,7 +117,7 @@ class BoardctlTests(unittest.TestCase):
 
         self.assertEqual(3, fake_msvcrt.attempts)
         self.assertEqual([fake_msvcrt.LK_NBLCK] * 3 + [fake_msvcrt.LK_UNLCK], [call[1] for call in fake_msvcrt.calls])
-        self.assertEqual([mock.call(0.01), mock.call(0.01)], sleeper.call_args_list)
+        self.assertEqual([mock.call(0.01), mock.call(0.02)], sleeper.call_args_list)
 
     def test_windows_lock_reraises_non_contention_errors_without_sleeping(self):
         class FakeMsvcrt:
@@ -144,6 +144,25 @@ class BoardctlTests(unittest.TestCase):
 
         self.assertEqual(1, len(fake_msvcrt.calls))
         sleeper.assert_not_called()
+
+    def test_windows_lock_contention_times_out_instead_of_spinning_forever(self):
+        class FakeMsvcrt:
+            LK_NBLCK = 1
+            LK_UNLCK = 2
+
+            def locking(self, file_descriptor, mode, size):
+                if mode == self.LK_NBLCK:
+                    raise OSError(errno.EACCES, "locked")
+
+        with tempfile.TemporaryDirectory() as temporary_directory, mock.patch("time.sleep"):
+            with mock.patch.object(self.boardctl(), "_fcntl", None), mock.patch.object(
+                self.boardctl(), "_msvcrt", FakeMsvcrt()
+            ), mock.patch.object(self.boardctl(), "LOCK_TIMEOUT_SECONDS", 0):
+                with self.assertRaises(TimeoutError):
+                    with self.boardctl().exclusive_lock(
+                        Path(temporary_directory) / ".dashboard.lock"
+                    ):
+                        self.fail("lock should not be acquired")
 
     def test_lock_without_backend_errors_before_creating_sidecar(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
