@@ -110,6 +110,11 @@ SECRET_PATTERNS = (
         re.IGNORECASE,
     ),
     re.compile(r"\b(?:gh[pousr]_[a-z0-9]{20,}|sk-[a-z0-9]{20,})\b", re.IGNORECASE),
+    # Common token formats that carry no keyword prefix. This scanner is a
+    # backstop, not a substitute for manual de-identification review.
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"\bxox[baprs]-[0-9A-Za-z-]{10,}\b"),
+    re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
 )
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]

@@ -165,4 +165,4 @@ The merge validates the entire resulting model. It rejects unsupported top-level
 
 `validate` deterministically checks required top-level containers, IDs, selected enums, revisions, source hashes and references, decision history, evidence task references, evidence for elevated `done` claims, unsafe URL protocols, embedded active HTML patterns, absolute local paths, and common secret patterns.
 
-Passing validation does not prove extraction completeness, semantic privacy, artifact correctness, target behavior, or approval. Those remain Harness and human-review responsibilities.
+Passing validation does not prove extraction completeness, semantic privacy, artifact correctness, target behavior, or approval. Those remain Harness and human-review responsibilities. The secret pattern scan in particular is a backstop for common token formats; it cannot recognize every credential shape and never replaces manual de-identification review before delivery.

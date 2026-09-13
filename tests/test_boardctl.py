@@ -444,6 +444,20 @@ class BoardctlTests(unittest.TestCase):
             self.boardctl().scan_sensitive(payload),
         )
 
+    def test_scan_sensitive_finds_common_token_formats(self):
+        tokens = (
+            "AKIA" + "IOSFODNN7EXAMPLE",
+            "xoxb-" + "0000000000000-synthetictokenvalue",
+            "AIza" + "Synthetic01234567890123456789012345",
+        )
+
+        for token in tokens:
+            with self.subTest(token=token):
+                self.assertEqual(
+                    ["note: contains possible secret"],
+                    self.boardctl().scan_sensitive({"note": token}),
+                )
+
     def test_validation_errors_are_sorted_and_repeatable(self):
         project = self.valid_project()
         project["tasks"][0]["reported_status"] = "finished"
