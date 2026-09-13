@@ -1401,6 +1401,31 @@ class BoardctlTests(unittest.TestCase):
         self.assertIn("待指派", page)
         self.assertNotIn("成员受限", page)
 
+    def test_private_view_keeps_dangling_owner_verbatim(self):
+        project = self.valid_project()
+        project["tasks"][0]["owner"] = "ghost-member"
+
+        filtered = self.boardctl().filter_for_audience(project, "private")
+        self.assertEqual("ghost-member", filtered["tasks"][0]["owner"])
+        self.assertNotIn("owner_summary", filtered["tasks"][0])
+
+        team = self.boardctl().filter_for_audience(project, "team")
+        self.assertNotIn("owner", team["tasks"][0])
+        self.assertEqual("Restricted member", team["tasks"][0]["owner_summary"])
+
+    def test_owner_and_decided_by_must_reference_existing_members(self):
+        project = self.valid_project()
+        project["tasks"][0]["owner"] = "ghost-member"
+        project["decisions"][0]["decided_by"] = "ghost-member"
+
+        self.assertEqual(
+            [
+                "decisions[0].decided_by: unknown member ID 'ghost-member'",
+                "tasks[0].owner: unknown member ID 'ghost-member'",
+            ],
+            self.boardctl().validate_project(project),
+        )
+
     def test_brief_escapes_markdown_metacharacters(self):
         project = self.valid_project()
         project["project"]["name"] = "[unsafe](javascript:alert(1)) # title"

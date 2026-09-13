@@ -349,11 +349,22 @@ def validate_project(project: Any) -> list[str]:
         if not isinstance(digest, str) or re.fullmatch(r"[0-9a-fA-F]{64}", digest) is None:
             errors.append(f"sources[{index}].sha256: expected 64 hexadecimal characters")
 
+    member_ids = {
+        member.get("id")
+        for member in _collection(project, "members")
+        if isinstance(member, dict) and isinstance(member.get("id"), str)
+    }
     for index, task in enumerate(_collection(project, "tasks")):
         if not isinstance(task, dict):
             continue
         base = f"tasks[{index}]"
         _validate_integer(errors, f"{base}.revision", task.get("revision"))
+        owner = task.get("owner")
+        if owner is not None and owner != "":
+            if not isinstance(owner, str):
+                errors.append(f"{base}.owner: expected string")
+            elif owner not in member_ids:
+                errors.append(f"{base}.owner: unknown member ID {owner!r}")
         _validate_enum(errors, f"{base}.reported_status", task.get("reported_status"), REPORTED_STATUSES)
         _validate_enum(errors, f"{base}.verification_level", task.get("verification_level"), VERIFICATION_LEVELS)
         _validate_enum(errors, f"{base}.approval_state", task.get("approval_state"), APPROVAL_STATES)
@@ -373,6 +384,14 @@ def validate_project(project: Any) -> list[str]:
                 decision.get("decision_state"),
                 DECISION_STATES,
             )
+            decided_by = decision.get("decided_by")
+            if decided_by is not None and decided_by != "":
+                if not isinstance(decided_by, str):
+                    errors.append(f"decisions[{index}].decided_by: expected string")
+                elif decided_by not in member_ids:
+                    errors.append(
+                        f"decisions[{index}].decided_by: unknown member ID {decided_by!r}"
+                    )
             supersedes = decision.get("supersedes")
             supersedes_path = f"decisions[{index}].supersedes"
             if not isinstance(supersedes, list):
@@ -760,24 +779,28 @@ def filter_for_audience(project: dict[str, Any], audience: str) -> dict[str, Any
         items: list[dict[str, Any]] = []
         for record in visible_records[collection]:
             safe_record = _view_record(record, collection, audience)
-            if collection == "tasks":
-                _genericize_hidden_reference(
-                    safe_record, "owner", visible_ids["members"], "Restricted member"
-                )
-            elif collection == "decisions":
-                _genericize_hidden_reference(
-                    safe_record, "decided_by", visible_ids["members"], "Restricted member"
-                )
-                supersedes = safe_record.get("supersedes")
-                if isinstance(supersedes, list):
-                    safe_record["supersedes"] = [
-                        decision_id for decision_id in supersedes
-                        if isinstance(decision_id, str) and decision_id in visible_ids["decisions"]
-                    ]
-            elif collection == "evidence":
-                _genericize_hidden_reference(
-                    safe_record, "task_id", visible_ids["tasks"], "Restricted task"
-                )
+            # The private view is full fidelity: genericizing belongs to
+            # restricted audiences only, otherwise a dangling reference in the
+            # source data would be silently rewritten into a restriction label.
+            if audience != "private":
+                if collection == "tasks":
+                    _genericize_hidden_reference(
+                        safe_record, "owner", visible_ids["members"], "Restricted member"
+                    )
+                elif collection == "decisions":
+                    _genericize_hidden_reference(
+                        safe_record, "decided_by", visible_ids["members"], "Restricted member"
+                    )
+                    supersedes = safe_record.get("supersedes")
+                    if isinstance(supersedes, list):
+                        safe_record["supersedes"] = [
+                            decision_id for decision_id in supersedes
+                            if isinstance(decision_id, str) and decision_id in visible_ids["decisions"]
+                        ]
+                elif collection == "evidence":
+                    _genericize_hidden_reference(
+                        safe_record, "task_id", visible_ids["tasks"], "Restricted task"
+                    )
             if collection in SOURCE_REF_COLLECTIONS:
                 label, refs = _source_label(safe_record.get("source_refs"), visible_ids["sources"])
                 safe_record["source_summary"] = label
