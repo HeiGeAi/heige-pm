@@ -370,6 +370,13 @@ def validate_project(project: Any) -> list[str]:
         _validate_enum(errors, f"{base}.approval_state", task.get("approval_state"), APPROVAL_STATES)
         _validate_enum(errors, f"{base}.visibility", task.get("visibility"), VISIBILITIES)
 
+    for index, update in enumerate(_collection(project, "updates")):
+        if not isinstance(update, dict):
+            continue
+        for field in ("sections", "risks", "learnings"):
+            if field in update and not isinstance(update[field], list):
+                errors.append(f"updates[{index}].{field}: expected array")
+
     decision_ids = {
         decision.get("id")
         for decision in _collection(project, "decisions")
@@ -1184,10 +1191,16 @@ def render_html(project: dict[str, Any], audience: str = "private", theme: str |
 
     decisions = cards(data["decisions"], decision_card)
 
+    def _join_entries(value: Any) -> str:
+        if not isinstance(value, list):
+            return ""
+        separator = "，" if colon == "：" else ", "
+        return separator.join(str(entry) for entry in value)
+
     risk_items = cards(data["updates"], lambda item: (
         f'<h3>{_display(item.get("title"), labels["not_recorded"])}</h3>'
-        f'<p>{labels["risks_label"]}{colon}{_display("，".join(map(str, item.get("risks", []))) if colon == "：" else ", ".join(map(str, item.get("risks", []))), labels["none"])}</p>'
-        f'<p>{labels["learnings_label"]}{colon}{_display("，".join(map(str, item.get("learnings", []))) if colon == "：" else ", ".join(map(str, item.get("learnings", []))), labels["none"])}</p>'
+        f'<p>{labels["risks_label"]}{colon}{_display(_join_entries(item.get("risks")), labels["none"])}</p>'
+        f'<p>{labels["learnings_label"]}{colon}{_display(_join_entries(item.get("learnings")), labels["none"])}</p>'
     ))
 
     def evidence_card(item: dict[str, Any]) -> str:

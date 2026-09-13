@@ -1461,6 +1461,24 @@ class BoardctlTests(unittest.TestCase):
             self.boardctl().validate_project(project),
         )
 
+    def test_updates_list_fields_must_be_arrays(self):
+        for field in ("sections", "risks", "learnings"):
+            with self.subTest(field=field):
+                project = self.valid_project()
+                project["updates"][0][field] = "abc"
+                self.assertEqual(
+                    [f"updates[0].{field}: expected array"],
+                    self.boardctl().validate_project(project),
+                )
+
+    def test_render_defends_against_non_list_risks_and_learnings(self):
+        project = self.valid_project()
+        project["updates"][0]["risks"] = "abc"
+        project["updates"][0]["learnings"] = "abc"
+
+        page = self.boardctl().render_html(project, "private")
+        self.assertNotIn("a, b, c", page)
+
     def test_brief_escapes_markdown_metacharacters(self):
         project = self.valid_project()
         project["project"]["name"] = "[unsafe](javascript:alert(1)) # title"
