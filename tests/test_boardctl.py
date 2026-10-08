@@ -47,6 +47,19 @@ class BoardctlTests(unittest.TestCase):
         except TypeError as error:
             self.fail(f"validation raised TypeError: {error}")
 
+    def test_optional_record_visibility_types_fail_closed(self):
+        for collection in ("updates", "decisions", "evidence", "deliveries"):
+            for value in ([], {}, None, "invalid"):
+                with self.subTest(collection=collection, value=value):
+                    project = self.valid_project()
+                    if not project[collection]:
+                        project[collection].append({"id": "fixture"})
+                    project[collection][0]["visibility"] = value
+                    errors = self.validate_without_type_error(project)
+                    self.assertTrue(any(f"{collection}[0].visibility" in e for e in errors), errors)
+                    self.assertEqual(self.boardctl()._record_visibility(project[collection][0], collection), "private")
+                    self.boardctl().filter_for_audience(project, "public")
+
     def test_canonical_skill_identity_is_heige_pm(self):
         expected = "heige-pm"
         skill_text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
