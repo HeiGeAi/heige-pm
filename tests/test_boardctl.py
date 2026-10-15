@@ -58,7 +58,12 @@ class BoardctlTests(unittest.TestCase):
                     errors = self.validate_without_type_error(project)
                     self.assertTrue(any(f"{collection}[0].visibility" in e for e in errors), errors)
                     self.assertEqual(self.boardctl()._record_visibility(project[collection][0], collection), "private")
-                    self.boardctl().filter_for_audience(project, "public")
+                    record_id = project[collection][0]["id"]
+                    for audience in ("public", "team"):
+                        filtered = self.boardctl().filter_for_audience(project, audience)
+                        self.assertNotIn(record_id, [record["id"] for record in filtered[collection]])
+                    # Filtering must not rewrite the input while failing closed.
+                    self.assertEqual(project[collection][0]["visibility"], value)
 
     def test_canonical_skill_identity_is_heige_pm(self):
         expected = "heige-pm"
