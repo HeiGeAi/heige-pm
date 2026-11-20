@@ -391,6 +391,12 @@ def validate_project(project: Any) -> list[str]:
         _validate_enum(errors, f"{base}.approval_state", task.get("approval_state"), APPROVAL_STATES)
         _validate_enum(errors, f"{base}.visibility", task.get("visibility"), VISIBILITIES)
 
+    for collection in ("updates", "decisions", "evidence", "deliveries"):
+        for index, record in enumerate(_collection(project, collection)):
+            if isinstance(record, dict) and "visibility" in record:
+                _validate_enum(errors, f"{collection}[{index}].visibility",
+                               record["visibility"], VISIBILITIES)
+
     for index, update in enumerate(_collection(project, "updates")):
         if not isinstance(update, dict):
             continue
@@ -718,7 +724,7 @@ def _record_visibility(record: dict[str, Any], collection: str) -> str:
     field = "sensitivity" if collection == "sources" else "visibility"
     if field in record:
         value = record.get(field)
-        return value if value in VISIBILITIES else "private"
+        return value if isinstance(value, str) and value in VISIBILITIES else "private"
     return "private"
 
 
